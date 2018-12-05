@@ -46,7 +46,7 @@ int main()
 
   	//Get IP
   	//more copy past
-  	struct hostent *lh = gethostbyname("cp.cs.rutgers.edu");
+  	struct hostent *lh = gethostbyname("man.cs.rutgers.edu");
 
     if (lh)
         puts(lh->h_name);
