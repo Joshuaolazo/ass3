@@ -52,13 +52,11 @@ int main()
         puts(lh->h_name);
     else
         herror("gethostbyname");
-
-    return 0;
     // end
 
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr(lh->h_name); 
+    servaddr.sin_addr.s_addr = inet_addr(lh->h_name);
     servaddr.sin_port = htons(PORT);
 
     // connect the client socket to server socket
