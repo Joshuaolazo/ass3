@@ -26,8 +26,6 @@ int main(int argc, char const *argv[])
     if( argc != 3){
         fprintf(stderr, "%s\n", "wrong number of input args");
     }
-    char* hostname= argv[2]
-
     int p = atoi(argv[2]);
     PORT = &p;
     printf("host is: %d ", hostname);
@@ -46,21 +44,42 @@ int main(int argc, char const *argv[])
         printf("Socket successfully created..\n");
     bzero(&servaddr, sizeof(servaddr));
 
-  	//Get IP
-  	//more copy past
-  	struct hostent *lh = gethostbyname(hostname);
-
-    if (lh)
-        puts(lh->h_name);
-    else
-        herror("gethostbyname");
-    // end
-
-    // assign IP, PORT
+    //Get IP
+    struct addrinfo hints, *res, *p;
+    int status;
+    char ipstr[INET6_ADDRSTRLEN];
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
+    hints.ai_socktype = SOCK_STREAM;
+    if ((status = getaddrinfo(argv[1], NULL, &hints, &res)) != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+        return 2;
+    }
+    printf("IP addresses for %s:\n\n", argv[1]);
+    for(p = res;p != NULL; p = p->ai_next) {
+        void *addr;
+        char *ipver;
+        // get the pointer to the address itself,
+        // different fields in IPv4 and IPv6:
+        if (p->ai_family == AF_INET) { // IPv4
+            struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+            addr = &(ipv4->sin_addr);
+            ipver = "IPv4";
+        } else { // IPv6
+            struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+            addr = &(ipv6->sin6_addr);
+            ipver = "IPv6";
+        }
+        // convert the IP to a string and print it:
+        inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
+        printf("  %s: %s\n", ipver, ipstr);
+    }
+    freeaddrinfo(res); // free the linked list
+    printf("Dec Equiv: %d\n", inet_addr(ipstr));
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr(lh->h_name);
+    servaddr.sin_addr.s_addr = inet_addr(ipstr);
     servaddr.sin_port = htons(*PORT);
-
+    
     // connect the client socket to server socket
     if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
         printf("connection with the server failed...\n");

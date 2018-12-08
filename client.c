@@ -1,54 +1,52 @@
 
-// Write CPP code here 
-#include <netdb.h> 
+// Write CPP code here
+#include <netdb.h>
 #include <arpa/inet.h>
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <string.h> 
-#include <sys/socket.h> 
-#define MAX 256 
-#define PORT 12421 
-#define SA struct sockaddr 
-void func(int sockfd) 
-{ 
-    char buff[MAX]; 
-    int n; 
-    for (;;) { 
-        bzero(buff, sizeof(buff)); 
-        printf("Enter the string : "); 
-        n = 0; 
-        while ((buff[n++] = getchar()) != '\n') 
-            ; 
-        write(sockfd, buff, sizeof(buff)); 
-        bzero(buff, sizeof(buff)); 
-        read(sockfd, buff, sizeof(buff)); 
-        printf("From Server : %s", buff); 
-        if ((strncmp(buff, "exit", 4)) == 0) { 
-            printf("Client Exit...\n"); 
-            break; 
-        } 
-    } 
-} 
-  
-int main(int argc, char * argv[]) 
-{ 
-    int sockfd, connfd; 
-    struct sockaddr_in servaddr, cli; 
-  
-    // socket create and varification 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-    if (sockfd == -1) { 
-        printf("socket creation failed...\n"); 
-        exit(0); 
-    } 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#define MAX 256
+#define PORT 12421
+#define SA struct sockaddr
+void func(int sockfd)
+{
+    char buff[MAX];
+    int n;
+    for (;;) {
+        bzero(buff, sizeof(buff));
+        printf("Enter the string : ");
+        n = 0;
+        while ((buff[n++] = getchar()) != '\n')
+            ;
+        write(sockfd, buff, sizeof(buff));
+        bzero(buff, sizeof(buff));
+        read(sockfd, buff, sizeof(buff));
+        printf("From Server : %s", buff);
+        if ((strncmp(buff, "exit", 4)) == 0) {
+            printf("Client Exit...\n");
+            break;
+        }
+    }
+}
+
+int main(int argc, char * argv[])
+{
+    int sockfd, connfd;
+    struct sockaddr_in servaddr, cli;
+
+    // socket create and varification
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        printf("socket creation failed...\n");
+        exit(0);
+    }
     else
-        printf("Socket successfully created..\n"); 
-    bzero(&servaddr, sizeof(servaddr)); 
-  
+        printf("Socket successfully created..\n");
+    bzero(&servaddr, sizeof(servaddr));
+
   	//Get IP
-  	
- 
- 		    struct addrinfo hints, *res, *p;
+ 	struct addrinfo hints, *res, *p;
     int status;
     char ipstr[INET6_ADDRSTRLEN];
     if (argc != 2) {
@@ -82,19 +80,19 @@ int main(int argc, char * argv[])
         printf("  %s: %s\n", ipver, ipstr);
     }
     freeaddrinfo(res); // free the linked list
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
  	printf("	Dec Equiv: %d\n", inet_addr(ipstr));
- 
+
  /*
   	//struct hostent* host;
   	//host = getaddrinfo("cp.cs.rutgers.edu");
   //printf("IP address = %s\n",	inet_ntop(*(long*)host->h_addr_list[0]));
-  	
+
   	struct hostent *lh = gethostbyname("cp.cs.rutgers.edu");
   	if(lh){
   		puts(lh->h_name);
@@ -105,11 +103,8 @@ int main(int argc, char * argv[])
   			herror("gethostbyname");
   			return 0;
   			}
-  	
-  	
-  	
-  	
-  	
+
+
   	char hostname[256];
   	hostname[256] = 0;
   	hostname = "cp.cs.rutgers.edu";
@@ -121,23 +116,23 @@ int main(int argc, char * argv[])
   			}
   */
 		// end
-    
-    // assign IP, PORT 
-    servaddr.sin_family = AF_INET; 
+
+    // assign IP, PORT
+    servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = inet_addr(ipstr);
-    servaddr.sin_port = htons(PORT); 
-  
-    // connect the client socket to server socket 
-    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
-        printf("connection with the server failed...\n"); 
-        exit(0); 
-    } 
+    servaddr.sin_port = htons(PORT);
+
+    // connect the client socket to server socket
+    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
+        printf("connection with the server failed...\n");
+        exit(0);
+    }
     else
-        printf("connected to the server..\n"); 
-  
-    // function for chat 
-    func(sockfd); 
-  
-    // close the socket 
-    close(sockfd); 
-} 
+        printf("connected to the server..\n");
+
+    // function for chat
+    func(sockfd);
+
+    // close the socket
+    close(sockfd);
+}
