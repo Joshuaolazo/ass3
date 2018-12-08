@@ -1,4 +1,16 @@
+#include <stdio.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+// define port and max for now
+#define MAX 256
+#define SA struct sockaddr
+
 #include "banking.h"
+int* PORT;
 
 // Function designed for chat between client and server.
 void func(int sockfd)
@@ -77,7 +89,9 @@ int main( int argc, char const *argv[])
 	if( argc != 2){
 		fprintf(stderr, "%s\n", "wrong number of input args");
 	}
-	*PORT = argv[1];
+  
+    int p = atoi(argv[1]);
+	PORT = &p;
 	printf("port is: %d ", *PORT);
 
     int sockfd, connfd, len;

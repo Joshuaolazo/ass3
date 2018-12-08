@@ -19,7 +19,7 @@
 #define MAX 256
 #define SA struct sockaddr
 
-int* PORT;
+
 //basic boolean definition
 typedef enum { false, true } bool;
 // account definition
