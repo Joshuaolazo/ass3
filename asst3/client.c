@@ -3,26 +3,34 @@
 void func(int sockfd)
 {
     char buff[MAX];
-    while(1) {
+    int n;
+    for (;;) {
         bzero(buff, sizeof(buff));
-        printf("Enter a command : ");
+        printf("Enter the string : ");
+        n = 0;
         while ((buff[n++] = getchar()) != '\n')
             ;
         write(sockfd, buff, sizeof(buff));
         bzero(buff, sizeof(buff));
         read(sockfd, buff, sizeof(buff));
         printf("From Server : %s", buff);
+        if ((strncmp(buff, "exit", 4)) == 0) {
+            printf("Client Exit...\n");
+            break;
+        }
     }
 }
 // Function to write commands to server
-void write(int sockfd)
+void writr(int sockfd)
 {
     // Initialize buffer
     char buff[MAX];
+    int n;
     // Continues to output commands forever
     while(1) {
         bzero(buff, sizeof(buff));
         printf("Enter a command : ");
+        n = 0;
         while ((buff[n++] = getchar()) != '\n')
             ;
         write(sockfd, buff, sizeof(buff));
@@ -32,7 +40,7 @@ void write(int sockfd)
 }
 
 // Function to read commands to server
-void read(int sockfd)
+void readr(int sockfd)
 {
     // Initialize buffer
     char buff[MAX];
@@ -51,11 +59,10 @@ int main(int argc, char const *argv[])
         fprintf(stderr, "%s\n", "wrong number of input args");
     }
     // Reads the last arg, the port, converts it to int, and updates global port
-    int p = atoi(argv[2]);
-    PORT = &p;
+    int port_int = atoi(argv[2]);
+    PORT = &port_int;
 
     // diagonostic prints
-    printf("host is: %d \n", hostname);
     printf("port is: %d \n", *PORT);
 
 
@@ -125,12 +132,12 @@ int main(int argc, char const *argv[])
 
     pthread_t send;
     pthread_t recieve;
-    if( pthread_create( &send , NULL ,  write , (void*) NULL) < 0)
+    if( pthread_create( &send , NULL ,  writr , (void*) NULL) < 0)
     {
         perror("could not create send thread");
         return -1;
     }
-    if( pthread_create( &recieve , NULL ,  recieve , (void*) NULL) < 0)
+    if( pthread_create( &recieve , NULL ,  readr , (void*) NULL) < 0)
     {
         perror("could not create recieve thread");
         return -1;
