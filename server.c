@@ -8,7 +8,20 @@
 #define MAX 256 
 #define PORT 12421
 #define SA struct sockaddr 
-  
+
+//basic boolean definition
+typedef enum { false, true } bool;
+
+typedef struct _account{
+	char name[256];
+	double balance;
+	bool flag;
+}account;
+
+
+
+
+
 // Function designed for chat between client and server. 
 void func(int sockfd) 
 { 
@@ -20,6 +33,47 @@ void func(int sockfd)
   
         // read the message from client and copy it in buffer 
         read(sockfd, buff, sizeof(buff)); 
+        
+        //My shitty code
+        account * example = malloc(sizeof(account));
+        char * inputcopy = malloc(strlen(buff)*sizeof(char)*2);
+        strcpy(inputcopy,buff);
+        example->balance = 100;
+        
+        if(strncmp("create",buff,6)==0){
+        printf("create\n");
+     }
+        else if(strncmp("serve",buff,5)==0){
+        printf("serve\n");
+     }
+        else if(strncmp("deposit",buff,7)==0){
+        strsep(&inputcopy,"deposit");
+        printf("deposit%s\n",inputcopy);
+     }
+        else if(strncmp("withdraw",buff,8)==0){
+        printf("withdraw\n");
+     }
+        else if(strncmp("query",buff,5)==0){
+        printf("query\n");
+     }
+        else if(strncmp("end",buff,3)==0){
+        printf("end\n");
+     }
+        else if(strncmp("quit",buff,4)==0){
+        printf("quit\n");
+     }
+        else
+        printf("error: %s does not contain a valid command\n",buff);
+        
+        
+        
+        
+        
+        
+        
+        
+        //end shit code
+        
         // print buffer which contains the client contents 
         printf("From client: %s\t To client : ", buff); 
         bzero(buff, MAX); 
