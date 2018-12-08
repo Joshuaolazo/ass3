@@ -15,6 +15,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <pthread.h>
 // define port and max for now
 #define MAX 256
 #define SA struct sockaddr

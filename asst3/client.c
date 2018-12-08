@@ -3,48 +3,77 @@
 void func(int sockfd)
 {
     char buff[MAX];
-    int n;
-    for (;;) {
+    while(1) {
         bzero(buff, sizeof(buff));
-        printf("Enter the string : ");
-        n = 0;
+        printf("Enter a command : ");
         while ((buff[n++] = getchar()) != '\n')
             ;
         write(sockfd, buff, sizeof(buff));
         bzero(buff, sizeof(buff));
         read(sockfd, buff, sizeof(buff));
         printf("From Server : %s", buff);
-        if ((strncmp(buff, "exit", 4)) == 0) {
-            printf("Client Exit...\n");
-            break;
-        }
+    }
+}
+// Function to write commands to server
+void write(int sockfd)
+{
+    // Initialize buffer
+    char buff[MAX];
+    // Continues to output commands forever
+    while(1) {
+        bzero(buff, sizeof(buff));
+        printf("Enter a command : ");
+        while ((buff[n++] = getchar()) != '\n')
+            ;
+        write(sockfd, buff, sizeof(buff));
+        // after a command is inputed, wait for 2 seconds
+        sleep(2);
     }
 }
 
+// Function to read commands to server
+void read(int sockfd)
+{
+    // Initialize buffer
+    char buff[MAX];
+    // Continues to read messages forever
+    while(1){
+        bzero(buff, sizeof(buff));
+        read(sockfd, buff, sizeof(buff));
+        printf("From Server : %s", buff);
+    }
+}
+// main function takes in args: ./client servername port
 int main(int argc, char const *argv[])
 {
+    // Strictly needs 3 arguments
     if( argc != 3){
         fprintf(stderr, "%s\n", "wrong number of input args");
     }
+    // Reads the last arg, the port, converts it to int, and updates global port
     int p = atoi(argv[2]);
     PORT = &p;
-    printf("host is: %d ", hostname);
-    printf("port is: %d ", *PORT);
+
+    // diagonostic prints
+    printf("host is: %d \n", hostname);
+    printf("port is: %d \n", *PORT);
+
 
     int sockfd, connfd;
     struct sockaddr_in servaddr, cli;
 
-    // socket create and varification
+    // socket create and verification
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         printf("socket creation failed...\n");
         exit(0);
-    }
-    else
+    }else{
         printf("Socket successfully created..\n");
+    }
     bzero(&servaddr, sizeof(servaddr));
 
-    //Get IP
+    // Get IP
+    // Followed Beej.us
     struct addrinfo hints, *res, *p;
     int status;
     char ipstr[INET6_ADDRSTRLEN];
@@ -74,19 +103,38 @@ int main(int argc, char const *argv[])
         inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
         printf("  %s: %s\n", ipver, ipstr);
     }
-    freeaddrinfo(res); // free the linked list
-    printf("Dec Equiv: %d\n", inet_addr(ipstr));
+    freeaddrinfo(res); // free the linked list of ips
+
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = inet_addr(ipstr);
     servaddr.sin_port = htons(*PORT);
-    
-    // connect the client socket to server socket
-    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
-        printf("connection with the server failed...\n");
+
+    // connect the client socket to server socket tries 15 times
+    int tries = 15;
+
+    while(connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0 && tries>0){
+        printf("connection with the server failed...trying again\n");
+        tries--;
+    }
+    if(tries>0){
+        printf("connected to the server\n");
+    }else{
+        printf("connection with the server failed too many times... exiting\n");
         exit(0);
     }
-    else
-        printf("connected to the server..\n");
+
+    pthread_t send;
+    pthread_t recieve;
+    if( pthread_create( &send , NULL ,  write , (void*) NULL) < 0)
+    {
+        perror("could not create send thread");
+        return -1;
+    }
+    if( pthread_create( &recieve , NULL ,  recieve , (void*) NULL) < 0)
+    {
+        perror("could not create recieve thread");
+        return -1;
+    }
 
     // function for chat
     func(sockfd);
