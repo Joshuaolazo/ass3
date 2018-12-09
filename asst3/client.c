@@ -2,7 +2,7 @@
 #include <time.h>
 
 clock_t start = clock();
-
+bool close = false;
 void func(int sockfd)
 {
     char buff[MAX];
@@ -33,7 +33,7 @@ void writr(void * args)
     char buff[MAX];
     int n;
     // Continues to output commands forever
-    while(1) {
+    while(close == false) {
         bzero(buff, sizeof(buff));
         printf("Enter a command : ");
         n = 0;
@@ -43,6 +43,7 @@ void writr(void * args)
         // after a command is inputed, wait for 2 seconds
         sleep(2);
     }
+    // pthread_exit
 }
 
 // Function to read commands to server
@@ -53,11 +54,19 @@ void readr(void * args)
     // Initialize buffer
     char buff[MAX];
     // Continues to read messages forever
-    while(1){
+    while(close == false){
         bzero(buff, sizeof(buff));
         read(sockfd, buff, sizeof(buff));
+
         printf("From Server : %s", buff);
+        if ((strncmp(buff, "Server is terminating program, DISCONNECTING\n", 45)) == 0) {
+            printf("Client Exiting\n");
+            close = true;
+            break;
+        }
+
     }
+    // pthread_exit
 }
 // main function takes in args: ./client servername port
 int main(int argc, char const *argv[])
@@ -138,14 +147,19 @@ int main(int argc, char const *argv[])
         exit(0);
     }
 
+    // makes two threads for send and recieve
     pthread_t send;
     pthread_t recieve;
-    if( pthread_create( &send , NULL ,  writr , (void*) sockfd) < 0)
+    // idk if attr is necessary
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    // idk if attr is necessary
+    if( pthread_create( &send , &attr ,  (void*)&writr , (void*) sockfd) < 0)
     {
         perror("could not create send thread");
         return -1;
     }
-    if( pthread_create( &recieve , NULL ,  readr , (void*) sockfd) < 0)
+    if( pthread_create( &recieve , &attr ,  (void*)&readr , (void*) sockfd) < 0)
     {
         perror("could not create recieve thread");
         return -1;

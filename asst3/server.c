@@ -1,12 +1,17 @@
 #include "banking.h"
 
+// global booleans to close and print
+bool close = false;
+bool print = false;
 // Function designed for chat between client and server.
 void func(int sockfd)
 {
     char buff[MAX];
     int n;
     // infinite loop for chat
-    for (;;) {
+    for (close == false) {
+
+        // server only reads
         bzero(buff, MAX);
 
         // read the message from client and copy it in buffer
@@ -48,31 +53,29 @@ void func(int sockfd)
 
         // print buffer which contains the client contents
         printf("From client: %s\t To client : ", buff);
-        bzero(buff, MAX);
-        n = 0;
-        // copy server message in the buffer
-        while ((buff[n++] = getchar()) != '\n')
-            ;
-
-        // and send that buffer to client
-        write(sockfd, buff, sizeof(buff));
-
-        // if msg contains "Exit" then server exit and chat ended.
-        if (strncmp("exit", buff, 4) == 0) {
-            printf("Server Exit...\n");
-            break;
-        }
     }
+    bzero(buff, MAX);
+    buff = "Server is terminating program, DISCONNECTING\n"
+    write(sockfd, buff, sizeof(buff));
+    //pthread_exit or return
 }
 
 
 void sig_handler(int signum)
 {
-    if( signum != SIGINT){
-        fprintf(stderr, "Recieved a signum thats not SIGINT, got: %d\n", signum );
+    if(signum== SIGINT){
+        close = true;
+    }else if (signum == SIGALARM) {
+        print = true;
+    }else{
+        fprintf(stderr, "Recieved a bad signum, got: %d closing anyways\n",signum);
+        close = true;
     }
-    printf("Control C pressed, exiting program\n");
+}
 
+void program_ender(void* args)
+{
+    printf("Control C pressed, exiting program\n");
     printf("Stoping Timer\n");
     printf("Locking all accounts\n");
     printf("Disconnecting all clients\n");
@@ -80,6 +83,25 @@ void sig_handler(int signum)
     printf("Deallocating all memory lol\n");
     printf("Closing all sockets\n");
     printf("Joining all threadss\n");
+}
+
+void metadata(void * args)
+{
+
+    printf("Beginning Metadata Dump\n");
+    Node* ptr =(Node*) malloc(sizeof(Node));
+    prt = LISTOFCLIENTS;
+    while(prt->next != NULL){
+
+        char* accountname= ptr->account->name;
+        double accountbalance= prt->account->balance;
+        if(ptr->account->flag == true){
+            printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance)
+        }else{
+            printf("%s\t%s\n", accountname,accountbalance)
+        }
+    }
+    
 
 }
 
