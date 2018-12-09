@@ -44,12 +44,6 @@ void func(int sockfd)
         printf("error: %s does not contain a valid command\n",buff);
 
 
-
-
-
-
-
-
         //end shit code
 
         // print buffer which contains the client contents
@@ -69,6 +63,24 @@ void func(int sockfd)
             break;
         }
     }
+}
+
+
+void sig_handler(int signum)
+{
+    if( signum != SIGINT){
+        fprintf(stderr, "Recieved a signum thats not SIGINT, got: %d\n", signum );
+    }
+    printf("Control C pressed, exiting program\n");
+
+    printf("Stoping Timer\n");
+    printf("Locking all accounts\n");
+    printf("Disconnecting all clients\n");
+    printf("Sending all clients shutdown messages\n");
+    printf("Deallocating all memory lol\n");
+    printf("Closing all sockets\n");
+    printf("Joining all threadss\n");
+
 }
 
 // Driver function

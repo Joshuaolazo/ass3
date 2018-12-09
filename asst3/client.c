@@ -1,4 +1,7 @@
 #include "banking.h"
+#include <time.h>
+
+clock_t start = clock();
 
 void func(int sockfd)
 {
@@ -20,9 +23,12 @@ void func(int sockfd)
         }
     }
 }
+
 // Function to write commands to server
-void writr(int sockfd)
+void writr(void * args)
 {
+    // type cast args to int
+    int sockfd = (int) args;
     // Initialize buffer
     char buff[MAX];
     int n;
@@ -40,8 +46,10 @@ void writr(int sockfd)
 }
 
 // Function to read commands to server
-void readr(int sockfd)
+void readr(void * args)
 {
+    // type cast args to int
+    int sockfd = (int) args;
     // Initialize buffer
     char buff[MAX];
     // Continues to read messages forever
@@ -132,12 +140,12 @@ int main(int argc, char const *argv[])
 
     pthread_t send;
     pthread_t recieve;
-    if( pthread_create( &send , NULL ,  writr , (void*) NULL) < 0)
+    if( pthread_create( &send , NULL ,  writr , (void*) sockfd) < 0)
     {
         perror("could not create send thread");
         return -1;
     }
-    if( pthread_create( &recieve , NULL ,  readr , (void*) NULL) < 0)
+    if( pthread_create( &recieve , NULL ,  readr , (void*) sockfd) < 0)
     {
         perror("could not create recieve thread");
         return -1;
