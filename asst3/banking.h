@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <signal.h>
 // define port and max for now
-#define MAX 256
+#define MAX 300
 #define SA struct sockaddr
 int* PORT;
 

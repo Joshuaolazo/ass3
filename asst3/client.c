@@ -1,11 +1,10 @@
 #include "banking.h"
 
-clock_t start = clock();
 bool close = false;
 void func(int sockfd)
 {
     char buff[MAX];
-    int n;
+	int n;
     for (;;) {
         bzero(buff, sizeof(buff));
         printf("Enter the string : ");
@@ -42,7 +41,8 @@ void writr(void * args)
         // after a command is inputed, wait for 2 seconds
         sleep(2);
     }
-    // pthread_exit
+	printf("read pthread exit\n");
+    pthread_exit();
 }
 
 // Function to read commands to server
@@ -65,7 +65,8 @@ void readr(void * args)
         }
 
     }
-    // pthread_exit
+	printf("write pthread exit\n");
+    pthread_exit();
 }
 // main function takes in args: ./client servername port
 int main(int argc, char const *argv[])
@@ -152,20 +153,22 @@ int main(int argc, char const *argv[])
     // idk if attr is necessary
     pthread_attr_t attr;
     pthread_attr_init(&attr);
+
     // idk if attr is necessary
-    if( pthread_create( &send , &attr ,  (void*)&writr , (void*) sockfd) < 0)
+    if( pthread_create( &send , &attr ,  (void*)&writr , (void*) sockfd ) < 0)
     {
         perror("could not create send thread");
         return -1;
     }
-    if( pthread_create( &recieve , &attr ,  (void*)&readr , (void*) sockfd) < 0)
+    if( pthread_create( &recieve , &attr ,  (void*)&readr , (void*) sockfd ) < 0)
     {
         perror("could not create recieve thread");
         return -1;
     }
 
     // function for chat
-    func(sockfd);
+    pthread_join(send);
+	pthread_join(recieve);
 
     // close the socket
     close(sockfd);

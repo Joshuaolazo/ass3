@@ -1,11 +1,144 @@
 #include "banking.h"
 
-// global booleans to close and print
-bool close = false;
-bool print = false;
+account * global= NULL;
+bool isServiceSession;
 
-// sephamore to stop all threads for print
-sem_t pmutex;
+//want to remove the command and the whitespace
+bool nameAlreadyExists(char * input){
+	//printf("starting name check\n");
+	if(global==NULL){
+	//	printf("namealready global is null\n");
+		return false;
+	}
+	//printf("global is not null\n");
+	account * pointer = malloc(sizeof(account));
+	pointer = global;
+	while(pointer!=NULL){
+		if(strcmp(input,pointer->name)==0)
+			return true;
+
+		pointer = pointer->next;
+		}
+	return false;
+}
+void createAccount(char * input)
+{
+	account * newAccount = malloc(sizeof(account));
+	account * pointer = malloc(sizeof(account));
+	newAccount->name = input;
+	newAccount->balance = 0;
+	newAccount->flag = false;
+	newAccount->next = NULL;
+	if(global==NULL){
+		//printf("global null\n");
+		global= newAccount;
+		//pointer = newAccount;
+		//printf("newAccount name is: %s\n", newAccount->name);
+		//printf("global first name is: %s\n", global->name);
+	}
+	else
+	{
+		//printf("global not null");
+		//Attach account at end of GLOBAL LL
+		pointer = global;
+		while(pointer->next!=NULL){
+			pointer=pointer->next;
+			printf("%s->%s\n",pointer->name,pointer->flag);
+		}
+
+		pointer->next =  newAccount;
+
+	}
+	return;
+}
+
+
+char* trimcommand(char * input, int a){
+
+	int i=0;
+	int k=1;
+	//remove first a letters
+	for(i=0; i<a;i++){
+		for(k=1;k<strlen(input);k++){
+			input[k-1]= input[k];
+			//printf("%s",input);
+			}
+		input[strlen(input)-1] = '\0';
+	}
+
+	//printf("first letters removed: %s\n",input);
+	//remove leading whitespace
+	while(input[0]==' '){
+		for(k=1;k<strlen(input);k++){
+			input[k-1] = input[k];
+			//printf("%s",input);
+		}
+
+		input[strlen(input)-1] = '\0';
+	}
+	//printf("leading whitespace removed: %s\n",input);
+	//remove trailing whitespace
+	while(input[strlen(input)-1]==' '||input[strlen(input)-1]=='\n'){
+		input[strlen(input)-1]= '\0';
+		//printf("removed 1",input);
+	}
+
+	printf("%s\n",input);
+	return input;
+}
+int isNumeric(char* data){
+	int i = 0;
+	int isNum = 1; //set to 0 if not numeric
+	int period = 0; //shouldnt be more than one period
+	int length = (int)(strlen(data));
+	for(i=0; i<length;i++){
+		char c = data[i];
+		if(c < '0' || c > '9'){
+			if(c == '.')
+				period++;
+			else
+				isNum = 0;
+			if(period > 1)
+				isNum = 0;
+		}
+	}
+	return isNum;
+}
+
+void metadata()
+{
+   	 //sem_wait(&mutex);
+   	 printf("Beginning Metadata Dump\n");
+    	account* ptr =(account*) malloc(sizeof(account));
+	/*
+	if(global == NULL){
+		printf("meta global null\n");
+	}*/
+	ptr = global;
+	/*
+	if(ptr == NULL){
+		printf("ptr null\n");
+	}
+	*/
+	int count =0;
+	//printf("account number is: %d\n", count);
+	while(ptr != NULL){
+		count++;
+		//printf("account number is: %d\n", count);
+        	char* accountname= ptr->name;
+        	double accountbalance= ptr->balance;
+        	if(ptr->flag == true){
+          		 printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance);
+        	}else{
+            		printf("%s\t%f\n", accountname,accountbalance);
+
+        	}
+		ptr=ptr->next;
+    	}
+
+    	//sem_post(&mutex);
+    	return;
+}
 
 // Function designed for chat between client and server.
 void func(int sockfd)
@@ -13,117 +146,185 @@ void func(int sockfd)
     char buff[MAX];
     int n;
     // infinite loop for chat
-    for (close == false) {
-
-        // server only reads
+    for (;;) {
         bzero(buff, MAX);
 
-        // read the messig_actge from client and copy it in buffer
+        // read the message from client and copy it in buffer
         read(sockfd, buff, sizeof(buff));
 
         //My shitty code
-        account * example = malloc(sizeof(account));
+
+        //example account created set to flagged account if not last node
+		  account * example;
+		  example = global;
+		  bool flagFound = false;
+
+		  while(example!=NULL){
+		  if(example->flag){
+		  		flagFound=true;
+		  		break;
+		  	}
+
+		  	example= example->next;
+		  }
+	//printf("after example\n");
         char * inputcopy = malloc(strlen(buff)*sizeof(char)*2);
         strcpy(inputcopy,buff);
-        example->balance = 100;
 
+
+     //CREATE ACCOUNT
         if(strncmp("create",buff,6)==0){
-            printf("create\n");
-        }
+        	strcpy(inputcopy,trimcommand(inputcopy,6));
+        	if(isServiceSession)
+        		printf("Cannot create new account during a service session.\n");
+        	else{
+        		if(nameAlreadyExists(inputcopy))
+        			printf("The account name you seek to create already exists.\n");
+        		else{
+        			if(strlen(inputcopy)>255)
+        				printf("The account name cannot exceed 255 characters.\n");
+        			else {
+					printf("creating new account\n");
+        				//CREATE NEW ACCOUNT
+        				createAccount(inputcopy);
+        				printf("Account: --%s-- has been successfully created.\n",inputcopy);
+        			}
+        		}
+        	}
+			metadata();
+     	}
+
+     //SERVICE
         else if(strncmp("serve",buff,5)==0){
-            printf("serve\n");
-        }
+        	strcpy(inputcopy,trimcommand(inputcopy,5));
+
+        	//FIND ACCOUNT TO SERVICE BY NAME
+        	bool nameMatch = false;
+        	example = global;
+		  	while(example!=NULL){
+		  		if(strcmp(inputcopy,example->name)==0){
+		  			nameMatch = true;
+		  			break;
+		  		}
+		  		example = example->next;
+		  	}
+        	//if Name NOT FOUND
+        	if(!nameMatch)
+        		printf("Account name to be serviced cannot be found.\n");
+
+        		else{
+
+        			if(example->flag||isServiceSession)		//Might need to differentiate between single service on client, and no concurrent serve on same account across multiple clients.
+        				printf("Error: Cannot service. An account is already in a service session.\n");
+
+       		 	else{
+        				example->flag = true;
+        				isServiceSession = true;
+        				printf("%d\n",isServiceSession);
+       				printf("Account with name: --%s-- :is now IN service\n",inputcopy);
+       	}
+       }
+     }
+
+     //DEPOSIT
         else if(strncmp("deposit",buff,7)==0){
-            strsep(&inputcopy,"deposit");
-            printf("deposit%s\n",inputcopy);
-        }
+        		if(example->flag){
+        			strcpy(inputcopy,trimcommand(inputcopy,7));
+        			if(isNumeric(inputcopy)){
+       		 		example->balance = example->balance + atof(inputcopy);
+        				printf("Balance of account --%s-- after deposit: %f\n",example->name,example->balance);
+ 				}
+ 					else
+ 						printf("Input is not Numeric.\n");
+ 			}
+ 				else
+ 					printf("Cannot Deposit, account is not in service.\n");
+     }
+
+     //WITHDRAW
         else if(strncmp("withdraw",buff,8)==0){
-            printf("withdraw\n");
-        }
+        		if(example->flag){
+        			strcpy(inputcopy,trimcommand(inputcopy,8));
+        			if(isNumeric(inputcopy)){
+
+        				if(example->balance<atof(inputcopy))
+        					printf("Withdraw request is invalid. ");
+        				else
+        					example->balance = example->balance - atof(inputcopy);
+
+        				printf("Balance of account --%s-- after withdraw: %f\n",example->name,example->balance);
+        		}
+      		  else
+ 						printf("Input is not Numeric.\n");
+ 			}
+ 				else
+ 					printf("Cannot Withdraw, account is not in service.\n");
+     }
+
+     //QUERY
         else if(strncmp("query",buff,5)==0){
-            printf("query\n");
-        }
+        		if(example->flag){
+       			printf("Current account balance is: %f\n",example->balance);
+       		}
+       		else
+       			printf("Cannot perform Query, account is not in service.\n");
+     }
+
+     //END SERVICE
         else if(strncmp("end",buff,3)==0){
-            printf("end\n");
-        }
+
+         	strcpy(inputcopy,trimcommand(inputcopy,3));
+
+      		if(!example->flag)
+        			printf("Error: The account service session has already been ended.\n");
+       	 	else{
+        			example->flag = false;
+        			isServiceSession = false;
+       			printf("Account with name: --%s-- :is now OUT OF service\n",inputcopy);
+       	}
+     }
+
+     //QUIT
         else if(strncmp("quit",buff,4)==0){
-            printf("quit\n");
-        }
-        else{
-            printf("error: %s does not contain a valid command\n",buff);
-        }
-         
+      	  printf("quit\n");
+     }
+        else
+       	 printf("error: %s does not contain a valid command\n",buff);
+
+
+
+
+
 
 
 
         //end shit code
 
         // print buffer which contains the client contents
+		/*
         printf("From client: %s\t To client : ", buff);
-    }
-    bzero(buff, MAX);
-    buff = "Server is terminating program, DISCONNECTING\n"
-    write(sockfd, buff, sizeof(buff));
-    //pthread_exit or return
-}
 
+        bzero(buff, MAX);
+        n = 0;
+        // copy server message in the buffer
+        while ((buff[n++] = getchar()) != '\n')
+            ;
 
-void sig_handler(int signum)
-{
-    if(signum== SIGINT){
-        close = true;
-    }else if (signum == SIGALARM) {
-        print = true;
-    }else{
-        fprintf(stderr, "Recieved a bad signum, got: %d closing anyways\n",signum);
-        close = true;
-    }
-}
+        // and send that buffer to client
+        write(sockfd, buff, sizeof(buff));
 
-void program_ender(void* args)
-{
-    printf("Control C pressed, exiting program\n");
-    printf("Stoping Timer\n");
-    printf("Locking all accounts\n");
-    printf("Disconnecting all clients\n");
-    printf("Sending all clients shutdown messages\n");
-    printf("Deallocating all memory lol\n");
-    printf("Closing all sockets\n");
-    printf("Joining all threadss\n");
-}
-
-void metadata(void * args)
-{
-    sem_wait(&mutex);
-    printf("Beginning Metadata Dump\n");
-    Node* ptr =(Node*) malloc(sizeof(Node));
-    prt = LISTOFCLIENTS;
-    while(prt->next != NULL){
-
-        char* accountname= ptr->account->name;
-        double accountbalance= prt->account->balance;
-        if(ptr->account->flag == true){
-            printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance)
-        }else{
-            printf("%s\t%s\n", accountname,accountbalance)
+        // if msg contains "Exit" then server exit and chat ended.
+        if (strncmp("exit", buff, 4) == 0) {
+            printf("Server Exit...\n");
+            break;
         }
+		*/
     }
-    sem_post(&mutex);
-
 }
 
 // Driver function
-int main(int argc, char const *argv[])
+int main()
 {
-	if( argc != 2){
-		fprintf(stderr, "%s\n", "wrong number of input args");
-	}
-    //Initialize sephamore
-    sem_init(&pmutex, 0, 1);
-
-    int p = atoi(argv[1]);
-	PORT = &p;
-	printf("port is: %d ", *PORT);
 
     int sockfd, connfd, len;
     struct sockaddr_in servaddr, cli;
@@ -133,33 +334,31 @@ int main(int argc, char const *argv[])
     if (sockfd == -1) {
         printf("socket creation failed...\n");
         exit(0);
-    }else{
-        printf("Socket successfully created..\n");
     }
-
+    else
+        printf("Socket successfully created..\n");
     bzero(&servaddr, sizeof(servaddr));
 
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(*PORT);
+    servaddr.sin_port = htons(PORT);
 
     // Binding newly created socket to given IP and verification
     if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
         printf("socket bind failed...\n");
         exit(0);
-    }else{
-        printf("Socket successfully binded..\n");
     }
-
+    else
+        printf("Socket successfully binded..\n");
 
     // Now server is ready to listen and verification
     if ((listen(sockfd, 5)) != 0) {
         printf("Listen failed...\n");
         exit(0);
-    }else{
-        printf("Server listening..\n");
     }
+    else
+        printf("Server listening..\n");
     len = sizeof(cli);
 
     // Accept the data packet from client and verification
@@ -167,43 +366,17 @@ int main(int argc, char const *argv[])
     if (connfd < 0) {
         printf("server acccept failed...\n");
         exit(0);
-    }else{
-        printf("server acccept the client...\n");
     }
+    else
+        printf("server acccept the client...\n");
 
-
+      isServiceSession= false;
+		global = malloc(sizeof(account));
+	global = NULL;
+	printf("entering func\n");
     // Function for chatting between client and server
     func(connfd);
 
-    /* Timer
-
-
-    struct itimerval timer;
-    struct sigaction sig_act;
-    memset (&sig_act, 0, sizeof (sig_act));
-    sig_act.sa_handler = &timer_handler;
-    sigaction (SIGVTALRM, &sig_act, NULL);
-
-    // Timer starts in 15 seconds
-    timer.it_value.tv_sec = 15;
-    timer.it_value.tv_usec = 0;
-    // Realarms every 15 seconds
-    timer.it_interval.tv_sec = 15;
-    timer.it_interval.tv_usec = 0;
-
-    setitimer (ITIMER_VIRTUAL, &timer, NULL);
-
-    */
-
-    /* End of server
-    while(close==false){
-
-    }
-
+    // After chatting close the socket
     close(sockfd);
-    */
-
-    close(sockfd);
-
-    return 1;
 }
