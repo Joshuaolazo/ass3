@@ -364,13 +364,14 @@ int main(int argc, char const *argv[])
 	else
 		printf("server acccept the client...\n");
 
-		isServiceSession= false;
-		global = malloc(sizeof(account));
-		global = NULL;
-		//printf("entering func\n");
-		// Function for chatting between client and server
-		func(connfd);
+	isServiceSession= false;
+	global = malloc(sizeof(account));
+	global = NULL;
+	//printf("entering func\n");
+	// Function for chatting between client and server
+	func(connfd);
 
-		// After chatting close the socket
-		close(sockfd);
+	// After chatting close the socket
+	close(sockfd);
+	return 0;
 }
