@@ -117,9 +117,14 @@ void metadata()
     //sem_wait(&mutex);
     printf("Beginning Metadata Dump\n");
     account* ptr =(account*) malloc(sizeof(account));
+	if(global == NULL){
+		printf("global null\n");
+	}
     ptr = global;
+	int count =0
+	printf("account number is: %d\n", count);
     while(ptr->next != NULL){
-
+		printf("account number is: %d\n", count);
         char* accountname= ptr->name;
         double accountbalance= ptr->balance;
         if(ptr->flag == true){
@@ -292,8 +297,9 @@ void func(int sockfd)
         //end shit code
 
         // print buffer which contains the client contents
-        printf("From client: %s\t To client : ", buff);
 		/*
+        printf("From client: %s\t To client : ", buff);
+
         bzero(buff, MAX);
         n = 0;
         // copy server message in the buffer
