@@ -8,18 +8,58 @@
 #define MAX 256 
 #define PORT 12421
 #define SA struct sockaddr 
+	
 
 //basic boolean definition
 typedef enum { false, true } bool;
 
 typedef struct _account{
-	char name[256];
+	char * name;
 	double balance;
 	bool flag;
+	struct _account * next;
 }account;
 
+account * global;
+bool isServiceSession;
 
 //want to remove the command and the whitespace
+bool nameAlreadyExists(char * input){
+	if(global=NULL)
+		return false;
+	account * pointer = malloc(sizeof(account));
+	pointer = global;
+	while(pointer!=NULL){
+		if(strcmp(input,pointer->name)==0)
+			return true;
+			
+		pointer = pointer->next;
+		}
+	return false;
+}
+
+void createAccount(char * input){
+	account * newAccount = malloc(sizeof(account));
+	account * pointer;
+	newAccount->name = input;
+	newAccount->balance = 0;
+	newAccount->flag = false;
+	if(global==NULL)
+		global = newAccount;
+	else{
+	//Attach account at end of GLOBAL LL
+		pointer = global;
+		while(pointer->next!=NULL){
+			pointer=pointer->next;
+			printf("%s->%s\n",pointer->name,pointer->flag);
+		}
+		
+		pointer->next =  newAccount;
+		
+		}	
+	return;
+}
+
 char* trimcommand(char * input, int a){
 	
 	int i=0;
@@ -85,28 +125,80 @@ void func(int sockfd)
         
         //My shitty code
         
-        //example account created
-		  account * example = malloc(sizeof(account));
+        //example account created set to flagged account if not last node
+		  account * example;
+		  example = global;
+		  bool flagFound = false;
+		  
+		  while(example->next!=NULL){
+		  if(example->flag){
+		  		flagFound=true;
+		  		break;
+		  	}
+		  	
+		  	example= example->next;
+		  } 
+		  
         char * inputcopy = malloc(strlen(buff)*sizeof(char)*2);
         strcpy(inputcopy,buff);
-        example->balance = 100;
-        example->flag = false;
         
         
      //CREATE ACCOUNT   
         if(strncmp("create",buff,6)==0){
-        printf("create\n");
+        		strcpy(inputcopy,trimcommand(inputcopy,6));
+        		if(isServiceSession)
+        			printf("Cannot create new account during a service session.\n");
+        		else{
+        			
+        			if(nameAlreadyExists(inputcopy))
+        				printf("The account name you seek to create already exists.\n");
+        			else{
+        				
+        				if(strlen(inputcopy)>255)
+        					printf("The account name cannot exceed 255 characters.\n");
+        				else {
+        					
+        					//CREATE NEW ACCOUNT
+        					createAccount(inputcopy);
+        					printf("Account: --%s-- has been successfully created.\n",inputcopy);
+        				}
+        			}
+        		
+        		
+        		}
+        		
      }
      
      //SERVICE
         else if(strncmp("serve",buff,5)==0){
         	strcpy(inputcopy,trimcommand(inputcopy,5));
-        	if(example->flag)
-        		printf("Error: Cannot service an account that is already in service.\n");
-        	else{
-        		example->flag = true;
-       		 printf("Account with name: %s :is now IN service\n",inputcopy);
+        	
+        	//FIND ACCOUNT TO SERVICE BY NAME
+        	bool nameMatch = false;
+        	example = global;
+		  	while(example!=NULL){
+		  		if(strcmp(inputcopy,example->name)==0){
+		  			nameMatch = true;
+		  			break;
+		  		}
+		  		example = example->next;
+		  	}
+        	//if Name NOT FOUND
+        	if(!nameMatch)
+        		printf("Account name to be serviced cannot be found.\n");
+        		
+        		else{
+        	
+        			if(example->flag||isServiceSession)		//Might need to differentiate between single service on client, and no concurrent serve on same account across multiple clients.
+        				printf("Error: Cannot service. An account is already in a service session.\n");
+        				
+       		 	else{
+        				example->flag = true;
+        				isServiceSession = true;
+        				printf("%d\n",isServiceSession);
+       				printf("Account with name: --%s-- :is now IN service\n",inputcopy);
        	}
+       }
      }
      
      //DEPOSIT
@@ -115,7 +207,7 @@ void func(int sockfd)
         			strcpy(inputcopy,trimcommand(inputcopy,7));
         			if(isNumeric(inputcopy)){
        		 		example->balance = example->balance + atof(inputcopy);
-        				printf("Balance after deposit: %f\n",example->balance);
+        				printf("Balance of account --%s-- after deposit: %f\n",example->name,example->balance);
  				}
  					else 
  						printf("Input is not Numeric.\n");
@@ -135,7 +227,7 @@ void func(int sockfd)
         				else
         					example->balance = example->balance - atof(inputcopy);
         		
-        				printf("Balance after withdraw: %f\n",example->balance);
+        				printf("Balance of account --%s-- after withdraw: %f\n",example->name,example->balance);
         		}
       		  else 
  						printf("Input is not Numeric.\n");
@@ -146,30 +238,33 @@ void func(int sockfd)
      
      //QUERY
         else if(strncmp("query",buff,5)==0){
-        	if(example->flag){
-       		 printf("Current account Balance is: %f\n",example->balance);
-       	}
-       	else 
-       		printf("Cannot perform Query, account is not in service.\n");
+        		if(example->flag){
+       			printf("Current account balance is: %f\n",example->balance);
+       		}
+       		else 
+       			printf("Cannot perform Query, account is not in service.\n");
      }
      
      //END SERVICE
         else if(strncmp("end",buff,3)==0){
-         strcpy(inputcopy,trimcommand(inputcopy,3));
-       if(!example->flag)
-        		printf("Error: The account service session has already been ended.\n");
-        	else{
-        		example->flag = false;
-       		 printf("Account with name: %s :is now OUT OF service\n",inputcopy);
+        	
+         	strcpy(inputcopy,trimcommand(inputcopy,3));
+         
+      		if(!example->flag)
+        			printf("Error: The account service session has already been ended.\n");
+       	 	else{
+        			example->flag = false;
+        			isServiceSession = false;
+       			printf("Account with name: --%s-- :is now OUT OF service\n",inputcopy);
        	}
      }
      
      //QUIT
         else if(strncmp("quit",buff,4)==0){
-        printf("quit\n");
+      	  printf("quit\n");
      }
         else
-        printf("error: %s does not contain a valid command\n",buff);
+       	 printf("error: %s does not contain a valid command\n",buff);
         
         
         
@@ -201,15 +296,8 @@ void func(int sockfd)
   
 // Driver function 
 int main() 
-{ 
-		/*
-		//example account created
-		  account * example = malloc(sizeof(account));
-        char * inputcopy = malloc(strlen(buff)*sizeof(char)*2);
-        strcpy(inputcopy,buff);
-        example->balance = 100;
-        */
-        
+{ 	
+
     int sockfd, connfd, len; 
     struct sockaddr_in servaddr, cli; 
   
@@ -253,6 +341,9 @@ int main()
     } 
     else
         printf("server acccept the client...\n"); 
+        
+      isServiceSession= false;
+		global = malloc(sizeof(account));
   
     // Function for chatting between client and server 
     func(connfd); 
