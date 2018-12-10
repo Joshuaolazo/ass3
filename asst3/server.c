@@ -143,6 +143,7 @@ void metadata()
 void signal_handler(int signum)
 {
     if(signum== SIGINT){
+		fprintf(stderr, "got control C\n",signum);
         terminate = true;
     }/*else if (signum == SIGALARM) {
         print = true;
