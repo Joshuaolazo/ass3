@@ -139,6 +139,18 @@ void metadata()
     	//sem_post(&mutex);
     	return;
 }
+void signal_handler(int signum)
+{
+    if(signum== SIGINT){
+        close = true;
+    }else if (signum == SIGALARM) {
+        print = true;
+    }else{
+        fprintf(stderr, "Recieved a bad signum, got: %d closing anyways\n",signum);
+        close = true;
+    }
+}
+
 
 // Function designed for chat between client and server.
 void func(int sockfd)
@@ -296,10 +308,12 @@ void func(int sockfd)
 // Driver function
 int main(int argc, char const *argv[])
 {
+
 	if( argc != 2){
 		fprintf(stderr, "%s\n", "wrong number of input args");
 	}
-    //Initialize sephamore
+	signal(SIGINT,signal_handler);
+		//Initialize sephamore
     //sem_init(&pmutex, 0, 1);
 
     int p = atoi(argv[1]);
