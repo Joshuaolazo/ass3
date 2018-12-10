@@ -353,7 +353,7 @@ int main(int argc, char const *argv[])
       isServiceSession= false;
 		global = malloc(sizeof(account));
 	global = NULL;
-	printf("entering func\n");
+	//printf("entering func\n");
     // Function for chatting between client and server
     func(connfd);
 

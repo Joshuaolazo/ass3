@@ -168,7 +168,8 @@ int main(int argc, char const *argv[])
         perror("could not create recieve thread");
         return -1;
     }
-
+	printf("send tid: %d\n",send );
+	printf("recieve tid: %d\n",recieve );
     // function for chat
     pthread_join(send,NULL);
 	pthread_join(recieve,NULL);

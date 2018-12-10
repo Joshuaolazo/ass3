@@ -133,7 +133,7 @@ void metadata()
 	/*
 	if(global == NULL){
 		printf("meta global null\n");
-	}*/	
+	}*/
 	ptr = global;
 	/*
 	if(ptr == NULL){
@@ -151,7 +151,7 @@ void metadata()
           		 printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance);
         	}else{
             		printf("%s\t%f\n", accountname,accountbalance);
-			
+
         	}
 		ptr=ptr->next;
     	}
@@ -173,7 +173,7 @@ void func(int sockfd)
         read(sockfd, buff, sizeof(buff));
 
         //My shitty code
-	
+
         //example account created set to flagged account if not last node
 		  account * example;
 		  example = global;
@@ -393,7 +393,7 @@ int main()
       isServiceSession= false;
 		global = malloc(sizeof(account));
 	global = NULL;
-	printf("entering func\n");
+	//printf("entering func\n");
     // Function for chatting between client and server
     func(connfd);
 
