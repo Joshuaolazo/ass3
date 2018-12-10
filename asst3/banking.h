@@ -28,9 +28,10 @@ int* PORT;
 typedef enum { false, true } bool;
 // account definition
 typedef struct _account{
-	char name[256];
+	char * name;
 	double balance;
 	bool flag;
+	struct _account * next;
 }account;
 
 
