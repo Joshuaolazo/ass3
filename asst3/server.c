@@ -2,6 +2,7 @@
 
 account * global= NULL;
 bool isServiceSession;
+bool terminate = false;
 
 //want to remove the command and the whitespace
 bool nameAlreadyExists(char * input){
@@ -142,12 +143,13 @@ void metadata()
 void signal_handler(int signum)
 {
     if(signum== SIGINT){
-        close = true;
-    }else if (signum == SIGALARM) {
+        terminate = true;
+    }/*else if (signum == SIGALARM) {
         print = true;
-    }else{
+    }*/
+	else{
         fprintf(stderr, "Recieved a bad signum, got: %d closing anyways\n",signum);
-        close = true;
+        terminate = true;
     }
 }
 
@@ -158,7 +160,7 @@ void func(int sockfd)
 	char buff[MAX];
 	int n;
 	// infinite loop for chat
-	while (close == false) {
+	while (terminate == false) {
 		bzero(buff, MAX);
 
 		// read the message from client and copy it in buffer
@@ -298,7 +300,7 @@ void func(int sockfd)
 		write(sockfd, buff, sizeof(buff));
 	}
 	bzero(buff, MAX);
-	buff = "Server is terminating program, DISCONNECTING\n"
+	sprintf(buff,"Server is terminating program, DISCONNECTING\n");
 	write(sockfd, buff, sizeof(buff));
 	return;
 }
@@ -306,7 +308,7 @@ void func(int sockfd)
 // Driver function
 int main(int argc, char const *argv[])
 {
-
+	terminate = false;
 	if( argc != 2){
 		fprintf(stderr, "%s\n", "wrong number of input args");
 	}
