@@ -155,155 +155,148 @@ void signal_handler(int signum)
 // Function designed for chat between client and server.
 void func(int sockfd)
 {
-    char buff[MAX];
-    int n;
-    // infinite loop for chat
-    while (close == false) {
-        bzero(buff, MAX);
+	char buff[MAX];
+	int n;
+	// infinite loop for chat
+	while (close == false) {
+		bzero(buff, MAX);
 
-        // read the message from client and copy it in buffer
-        read(sockfd, buff, sizeof(buff));
+		// read the message from client and copy it in buffer
+		read(sockfd, buff, sizeof(buff));
 
-        //My shitty code
+		//My shitty code
 
-        //example account created set to flagged account if not last node
-		  account * example;
-		  example = global;
-		  bool flagFound = false;
+		//example account created set to flagged account if not last node
+		account * example;
+		example = global;
+		bool flagFound = false;
 
-		  while(example!=NULL){
-		  if(example->flag){
-		  		flagFound=true;
-		  		break;
-		  	}
+		while(example!=NULL){
+			if(example->flag){
+				flagFound=true;
+				break;
+			}
+			if(example->next==NULL)
+				break;
+			example= example->next;
+		}
+		//printf("after example\n");
+		char * inputcopy = malloc(strlen(buff)*sizeof(char)*2);
+		strcpy(inputcopy,buff);
 
-		  	example= example->next;
-		  }
-	//printf("after example\n");
-        char * inputcopy = malloc(strlen(buff)*sizeof(char)*2);
-        strcpy(inputcopy,buff);
 
+		//CREATE ACCOUNT
+		if(strncmp("create",buff,6)==0){
+			strcpy(inputcopy,trimcommand(inputcopy,6));
+			if(isServiceSession)
+				sprintf(buff,"Cannot create new account during a service session.\n");
+			else{
+				if(nameAlreadyExists(inputcopy))
+					sprintf(buff,"The account name you seek to create already exists.\n");
+				else{
+					if(strlen(inputcopy)>255)
+						sprintf(buff,"The account name cannot exceed 255 characters.\n");
+					else {
+						//CREATE NEW ACCOUNT
+						createAccount(inputcopy);
+						sprintf(buff,"Account: --%s-- has been successfully created.\n",inputcopy);
+					}
+				}
+			}
+			//metadata();
+		}
 
-     //CREATE ACCOUNT
-        if(strncmp("create",buff,6)==0){
-        	strcpy(inputcopy,trimcommand(inputcopy,6));
-        	if(isServiceSession)
-        		printf("Cannot create new account during a service session.\n");
-        	else{
-        		if(nameAlreadyExists(inputcopy))
-        			printf("The account name you seek to create already exists.\n");
-        		else{
-        			if(strlen(inputcopy)>255)
-        				printf("The account name cannot exceed 255 characters.\n");
-        			else {
-					printf("creating new account\n");
-        				//CREATE NEW ACCOUNT
-        				createAccount(inputcopy);
-        				printf("Account: --%s-- has been successfully created.\n",inputcopy);
-        			}
+		//SERVICE
+		else if(strncmp("serve",buff,5)==0){
+			strcpy(inputcopy,trimcommand(inputcopy,5));
+
+			//FIND ACCOUNT TO SERVICE BY NAME
+			bool nameMatch = false;
+			example = global;
+			while(example!=NULL){
+				if(strcmp(inputcopy,example->name)==0){
+					nameMatch = true;
+					break;
+				}
+				example = example->next;
+			}
+			//if Name NOT FOUND
+			if(!nameMatch)
+				sprintf(buff,"Account name to be serviced cannot be found.\n");
+			else{
+				if(example->flag||isServiceSession)		//Might need to differentiate between single service on client, and no concurrent serve on same account across multiple clients.
+					sprintf(buff,"Error: Cannot service. An account is already in a service session.\n");
+				else{
+					example->flag = true;
+					isServiceSession = true;
+					sprintf(buff,"Account with name: --%s-- :is now IN service\n",inputcopy);
+				}
+			}
+		}
+
+		//DEPOSIT
+		else if(strncmp("deposit",buff,7)==0){
+			if(example->flag){
+				strcpy(inputcopy,trimcommand(inputcopy,7));
+				if(isNumeric(inputcopy)){
+					example->balance = example->balance + atof(inputcopy);
+					sprintf(buff,"Balance of account --%s-- after deposit: %f\n",example->name,example->balance);
+				}
+				else
+					sprintf(buff,"Input is not Numeric.\n");
+			}
+			else
+				sprintf(buff,"Cannot Deposit, account is not in service.\n");
+		}
+
+		//WITHDRAW
+		else if(strncmp("withdraw",buff,8)==0){
+			if(example->flag){
+				strcpy(inputcopy,trimcommand(inputcopy,8));
+				if(isNumeric(inputcopy)){
+					if(example->balance<atof(inputcopy))
+						sprintf(buff,"Withdraw request is invalid.\n");
+					else{
+ 						example->balance = example->balance - atof(inputcopy);
+						sprintf(buff,"Balance of account --%s-- after withdraw: %f\n",example->name,example->balance);
+					}
         		}
-        	}
-			metadata();
-     	}
+				else
+					sprintf(buff,"Input is not Numeric.\n");
+			}
+				else
+					sprintf(buff,"Cannot Withdraw, account is not in service.\n");
+		}
 
-     //SERVICE
-        else if(strncmp("serve",buff,5)==0){
-        	strcpy(inputcopy,trimcommand(inputcopy,5));
+		//QUERY
+		else if(strncmp("query",buff,5)==0){
+			if(example->flag){
+				sprintf(buff,"Current account balance is: %f\n",example->balance);
+			}
+			else
+				sprintf(buff,"Cannot perform Query, account is not in service.\n");
+		}
 
-        	//FIND ACCOUNT TO SERVICE BY NAME
-        	bool nameMatch = false;
-        	example = global;
-		  	while(example!=NULL){
-		  		if(strcmp(inputcopy,example->name)==0){
-		  			nameMatch = true;
-		  			break;
-		  		}
-		  		example = example->next;
-		  	}
-        	//if Name NOT FOUND
-        	if(!nameMatch)
-        		printf("Account name to be serviced cannot be found.\n");
+		//END SERVICE
+		else if(strncmp("end",buff,3)==0){
+			strcpy(inputcopy,trimcommand(inputcopy,3));
+			if(!example->flag)
+				sprintf(buff,"Error: The account service session has already been ended.\n");
+			else{
+				example->flag = false;
+				isServiceSession = false;
+				sprintf(buff,"Account with name: --%s-- :is now OUT OF service\n",inputcopy);
+			}
+		}
 
-        		else{
-
-        			if(example->flag||isServiceSession)		//Might need to differentiate between single service on client, and no concurrent serve on same account across multiple clients.
-        				printf("Error: Cannot service. An account is already in a service session.\n");
-
-       		 	else{
-        			example->flag = true;
-        			isServiceSession = true;
-        			printf("%d\n",isServiceSession);
-       				printf("Account with name: --%s-- :is now IN service\n",inputcopy);
-       	}
-       }
-     }
-
-     //DEPOSIT
-        else if(strncmp("deposit",buff,7)==0){
-        		if(example->flag){
-        			strcpy(inputcopy,trimcommand(inputcopy,7));
-        			if(isNumeric(inputcopy)){
-       		 		example->balance = example->balance + atof(inputcopy);
-        				printf("Balance of account --%s-- after deposit: %f\n",example->name,example->balance);
- 				}
- 					else
- 						printf("Input is not Numeric.\n");
- 			}
- 				else
- 					printf("Cannot Deposit, account is not in service.\n");
-     }
-
-     //WITHDRAW
-        else if(strncmp("withdraw",buff,8)==0){
-        		if(example->flag){
-        			strcpy(inputcopy,trimcommand(inputcopy,8));
-        			if(isNumeric(inputcopy)){
-
-        				if(example->balance<atof(inputcopy))
-        					printf("Withdraw request is invalid. ");
-        				else
-        					example->balance = example->balance - atof(inputcopy);
-
-        				printf("Balance of account --%s-- after withdraw: %f\n",example->name,example->balance);
-        		}
-      		  else
- 						printf("Input is not Numeric.\n");
- 			}
- 				else
- 					printf("Cannot Withdraw, account is not in service.\n");
-     }
-
-     //QUERY
-        else if(strncmp("query",buff,5)==0){
-        		if(example->flag){
-       			printf("Current account balance is: %f\n",example->balance);
-       		}
-       		else
-       			printf("Cannot perform Query, account is not in service.\n");
-     }
-
-     //END SERVICE
-        else if(strncmp("end",buff,3)==0){
-
-         	strcpy(inputcopy,trimcommand(inputcopy,3));
-
-      		if(!example->flag)
-        			printf("Error: The account service session has already been ended.\n");
-       	 	else{
-        			example->flag = false;
-        			isServiceSession = false;
-       			printf("Account with name: --%s-- :is now OUT OF service\n",inputcopy);
-       	}
-     }
-
-     //QUIT
-        else if(strncmp("quit",buff,4)==0){
-      	  printf("quit\n");
-     }
-        else
-       	 printf("error: %s does not contain a valid command\n",buff);
-    }
-
+		//QUIT
+		else if(strncmp("quit",buff,4)==0){
+			sprintf(buff,"quit\n");
+		}
+		else
+		sprintf(buff,"error: %s does not contain a valid command\n",buff);
+		write(sockfd, buff, sizeof(buff));
+	}
 	bzero(buff, MAX);
 	buff = "Server is terminating program, DISCONNECTING\n"
 	write(sockfd, buff, sizeof(buff));
