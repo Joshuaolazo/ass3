@@ -32,7 +32,7 @@ bool nameAlreadyExists(char * input){
 	while(pointer!=NULL){
 		if(strcmp(input,pointer->name)==0)
 			return true;
-			
+
 		pointer = pointer->next;
 		}
 	return false;
@@ -111,6 +111,27 @@ int isNumeric(char* data){
 	}
 	return isNum;
 }
+
+void metadata()
+{
+    //sem_wait(&mutex);
+    printf("Beginning Metadata Dump\n");
+    account* ptr =(account*) malloc(sizeof(account));
+    ptr = global;
+    while(prt->next != NULL){
+
+        char* accountname= ptr->name;
+        double accountbalance= prt->balance;
+        if(ptr->account->flag == true){
+            printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance)
+        }else{
+            printf("%s\t%s\n", accountname,accountbalance)
+        }
+    }
+    //sem_post(&mutex);
+
+}
+
 // Function designed for chat between client and server.
 void func(int sockfd)
 {
@@ -272,6 +293,7 @@ void func(int sockfd)
 
         // print buffer which contains the client contents
         printf("From client: %s\t To client : ", buff);
+		/*
         bzero(buff, MAX);
         n = 0;
         // copy server message in the buffer
@@ -286,6 +308,7 @@ void func(int sockfd)
             printf("Server Exit...\n");
             break;
         }
+		*/
     }
 }
 
