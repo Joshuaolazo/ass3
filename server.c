@@ -20,13 +20,17 @@ typedef struct _account{
 	struct _account * next;
 }account;
 
-account * global;
+account * global= NULL;
 bool isServiceSession;
 
 //want to remove the command and the whitespace
 bool nameAlreadyExists(char * input){
-	if(global=NULL)
+	//printf("starting name check\n");
+	if(global==NULL){
+	//	printf("namealready global is null\n");
 		return false;
+	}
+	//printf("global is not null\n");
 	account * pointer = malloc(sizeof(account));
 	pointer = global;
 	while(pointer!=NULL){
@@ -37,17 +41,25 @@ bool nameAlreadyExists(char * input){
 		}
 	return false;
 }
-
-void createAccount(char * input){
+void createAccount(char * input)
+{
 	account * newAccount = malloc(sizeof(account));
-	account * pointer;
+	account * pointer = malloc(sizeof(account));
 	newAccount->name = input;
 	newAccount->balance = 0;
 	newAccount->flag = false;
-	if(global==NULL)
-		global = newAccount;
-	else{
-	//Attach account at end of GLOBAL LL
+	newAccount->next = NULL;
+	if(global==NULL){
+		//printf("global null\n");
+		global= newAccount;
+		//pointer = newAccount;
+		//printf("newAccount name is: %s\n", newAccount->name);
+		//printf("global first name is: %s\n", global->name);
+	}
+	else
+	{
+		//printf("global not null");
+		//Attach account at end of GLOBAL LL
 		pointer = global;
 		while(pointer->next!=NULL){
 			pointer=pointer->next;
@@ -56,9 +68,10 @@ void createAccount(char * input){
 
 		pointer->next =  newAccount;
 
-		}
+	}
 	return;
 }
+
 
 char* trimcommand(char * input, int a){
 
@@ -114,28 +127,37 @@ int isNumeric(char* data){
 
 void metadata()
 {
-    //sem_wait(&mutex);
-    printf("Beginning Metadata Dump\n");
-    account* ptr =(account*) malloc(sizeof(account));
+   	 //sem_wait(&mutex);
+   	 printf("Beginning Metadata Dump\n");
+    	account* ptr =(account*) malloc(sizeof(account));
+	/*
 	if(global == NULL){
-		printf("global null\n");
+		printf("meta global null\n");
+	}*/	
+	ptr = global;
+	/*
+	if(ptr == NULL){
+		printf("ptr null\n");
 	}
-    ptr = global;
-	printf("before");
-	int count =0
-	printf("account number is: %d\n", count);
-    while(ptr->next != NULL){
-		printf("account number is: %d\n", count);
-        char* accountname= ptr->name;
-        double accountbalance= ptr->balance;
-        if(ptr->flag == true){
-            printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance);
-        }else{
-            printf("%s\t%s\n", accountname,accountbalance);
-        }
-    }
-    //sem_post(&mutex);
+	*/
+	int count =0;
+	//printf("account number is: %d\n", count);
+	while(ptr != NULL){
+		count++;
+		//printf("account number is: %d\n", count);
+        	char* accountname= ptr->name;
+        	double accountbalance= ptr->balance;
+        	if(ptr->flag == true){
+          		 printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance);
+        	}else{
+            		printf("%s\t%f\n", accountname,accountbalance);
+			
+        	}
+		ptr=ptr->next;
+    	}
 
+    	//sem_post(&mutex);
+    	return;
 }
 
 // Function designed for chat between client and server.
@@ -151,13 +173,13 @@ void func(int sockfd)
         read(sockfd, buff, sizeof(buff));
 
         //My shitty code
-
+	
         //example account created set to flagged account if not last node
 		  account * example;
 		  example = global;
 		  bool flagFound = false;
 
-		  while(example->next!=NULL){
+		  while(example!=NULL){
 		  if(example->flag){
 		  		flagFound=true;
 		  		break;
@@ -165,7 +187,7 @@ void func(int sockfd)
 
 		  	example= example->next;
 		  }
-
+	//printf("after example\n");
         char * inputcopy = malloc(strlen(buff)*sizeof(char)*2);
         strcpy(inputcopy,buff);
 
@@ -182,6 +204,7 @@ void func(int sockfd)
         			if(strlen(inputcopy)>255)
         				printf("The account name cannot exceed 255 characters.\n");
         			else {
+					printf("creating new account\n");
         				//CREATE NEW ACCOUNT
         				createAccount(inputcopy);
         				printf("Account: --%s-- has been successfully created.\n",inputcopy);
@@ -369,7 +392,8 @@ int main()
 
       isServiceSession= false;
 		global = malloc(sizeof(account));
-
+	global = NULL;
+	printf("entering func\n");
     // Function for chatting between client and server
     func(connfd);
 
