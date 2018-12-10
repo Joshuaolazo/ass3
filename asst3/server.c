@@ -158,7 +158,7 @@ void func(int sockfd)
     char buff[MAX];
     int n;
     // infinite loop for chat
-    for (;;) {
+    while (close == false) {
         bzero(buff, MAX);
 
         // read the message from client and copy it in buffer
@@ -230,9 +230,9 @@ void func(int sockfd)
         				printf("Error: Cannot service. An account is already in a service session.\n");
 
        		 	else{
-        				example->flag = true;
-        				isServiceSession = true;
-        				printf("%d\n",isServiceSession);
+        			example->flag = true;
+        			isServiceSession = true;
+        			printf("%d\n",isServiceSession);
        				printf("Account with name: --%s-- :is now IN service\n",inputcopy);
        	}
        }
@@ -303,6 +303,11 @@ void func(int sockfd)
         else
        	 printf("error: %s does not contain a valid command\n",buff);
     }
+
+	bzero(buff, MAX);
+	buff = "Server is terminating program, DISCONNECTING\n"
+	write(sockfd, buff, sizeof(buff));
+	return;
 }
 
 // Driver function
@@ -313,64 +318,63 @@ int main(int argc, char const *argv[])
 		fprintf(stderr, "%s\n", "wrong number of input args");
 	}
 	signal(SIGINT,signal_handler);
-		//Initialize sephamore
+	//Initialize sephamore
     //sem_init(&pmutex, 0, 1);
 
-    int p = atoi(argv[1]);
+	int p = atoi(argv[1]);
 	PORT = &p;
 	printf("port is: %d ", *PORT);
 
-    int sockfd, connfd, len;
-    struct sockaddr_in servaddr, cli;
+	int sockfd, connfd, len;
+	struct sockaddr_in servaddr, cli;
+	// socket create and verification
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd == -1) {
+		printf("socket creation failed...\n");
+		exit(0);
+	}
+	else
+		printf("Socket successfully created..\n");
+	bzero(&servaddr, sizeof(servaddr));
 
-    // socket create and verification
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        printf("socket creation failed...\n");
-        exit(0);
-    }
-    else
-        printf("Socket successfully created..\n");
-    bzero(&servaddr, sizeof(servaddr));
+	// assign IP, PORT
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	servaddr.sin_port = htons(*PORT);
 
-    // assign IP, PORT
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(*PORT);
+	// Binding newly created socket to given IP and verification
+	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
+		printf("socket bind failed...\n");
+ 		exit(0);
+	}
+	else
+		printf("Socket successfully binded..\n");
 
-    // Binding newly created socket to given IP and verification
-    if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
-        printf("socket bind failed...\n");
-        exit(0);
-    }
-    else
-        printf("Socket successfully binded..\n");
+	// Now server is ready to listen and verification
+	if ((listen(sockfd, 5)) != 0) {
+		printf("Listen failed...\n");
+ 		exit(0);
+	}
+	else
+		printf("Server listening..\n");
+	len = sizeof(cli);
 
-    // Now server is ready to listen and verification
-    if ((listen(sockfd, 5)) != 0) {
-        printf("Listen failed...\n");
-        exit(0);
-    }
-    else
-        printf("Server listening..\n");
-    len = sizeof(cli);
+	// Accept the data packet from client and verification
+	connfd = accept(sockfd, (SA*)&cli, &len);
+	if (connfd < 0) {
+		printf("server acccept failed...\n");
+		exit(0);
+	}
+	else
+		printf("server acccept the client...\n");
 
-    // Accept the data packet from client and verification
-    connfd = accept(sockfd, (SA*)&cli, &len);
-    if (connfd < 0) {
-        printf("server acccept failed...\n");
-        exit(0);
-    }
-    else
-        printf("server acccept the client...\n");
-
-      isServiceSession= false;
+		isServiceSession= false;
 		global = malloc(sizeof(account));
-	global = NULL;
-	//printf("entering func\n");
-    // Function for chatting between client and server
-    func(connfd);
+		global = NULL;
+		//printf("entering func\n");
+		// Function for chatting between client and server
+		func(connfd);
 
-    // After chatting close the socket
-    close(sockfd);
+		// After chatting close the socket
+		close(sockfd);
 }
