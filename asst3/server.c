@@ -3,6 +3,10 @@
 // global booleans to close and print
 bool close = false;
 bool print = false;
+
+// sephamore to stop all threads for print
+sem_t pmutex;
+
 // Function designed for chat between client and server.
 void func(int sockfd)
 {
@@ -14,7 +18,7 @@ void func(int sockfd)
         // server only reads
         bzero(buff, MAX);
 
-        // read the message from client and copy it in buffer
+        // read the messig_actge from client and copy it in buffer
         read(sockfd, buff, sizeof(buff));
 
         //My shitty code
@@ -24,29 +28,32 @@ void func(int sockfd)
         example->balance = 100;
 
         if(strncmp("create",buff,6)==0){
-        printf("create\n");
-     }
+            printf("create\n");
+        }
         else if(strncmp("serve",buff,5)==0){
-        printf("serve\n");
-     }
+            printf("serve\n");
+        }
         else if(strncmp("deposit",buff,7)==0){
-        strsep(&inputcopy,"deposit");
-        printf("deposit%s\n",inputcopy);
-     }
+            strsep(&inputcopy,"deposit");
+            printf("deposit%s\n",inputcopy);
+        }
         else if(strncmp("withdraw",buff,8)==0){
-        printf("withdraw\n");
-     }
+            printf("withdraw\n");
+        }
         else if(strncmp("query",buff,5)==0){
-        printf("query\n");
-     }
+            printf("query\n");
+        }
         else if(strncmp("end",buff,3)==0){
-        printf("end\n");
-     }
+            printf("end\n");
+        }
         else if(strncmp("quit",buff,4)==0){
-        printf("quit\n");
-     }
-        else
-        printf("error: %s does not contain a valid command\n",buff);
+            printf("quit\n");
+        }
+        else{
+            printf("error: %s does not contain a valid command\n",buff);
+        }
+         
+
 
 
         //end shit code
@@ -87,7 +94,7 @@ void program_ender(void* args)
 
 void metadata(void * args)
 {
-
+    sem_wait(&mutex);
     printf("Beginning Metadata Dump\n");
     Node* ptr =(Node*) malloc(sizeof(Node));
     prt = LISTOFCLIENTS;
@@ -101,7 +108,7 @@ void metadata(void * args)
             printf("%s\t%s\n", accountname,accountbalance)
         }
     }
-
+    sem_post(&mutex);
 
 }
 
@@ -111,6 +118,8 @@ int main(int argc, char const *argv[])
 	if( argc != 2){
 		fprintf(stderr, "%s\n", "wrong number of input args");
 	}
+    //Initialize sephamore
+    sem_init(&pmutex, 0, 1);
 
     int p = atoi(argv[1]);
 	PORT = &p;
@@ -124,9 +133,10 @@ int main(int argc, char const *argv[])
     if (sockfd == -1) {
         printf("socket creation failed...\n");
         exit(0);
-    }
-    else
+    }else{
         printf("Socket successfully created..\n");
+    }
+
     bzero(&servaddr, sizeof(servaddr));
 
     // assign IP, PORT
@@ -165,7 +175,35 @@ int main(int argc, char const *argv[])
     // Function for chatting between client and server
     func(connfd);
 
+    /* Timer
 
-    // After chatting close the socket
+
+    struct itimerval timer;
+    struct sigaction sig_act;
+    memset (&sig_act, 0, sizeof (sig_act));
+    sig_act.sa_handler = &timer_handler;
+    sigaction (SIGVTALRM, &sig_act, NULL);
+
+    // Timer starts in 15 seconds
+    timer.it_value.tv_sec = 15;
+    timer.it_value.tv_usec = 0;
+    // Realarms every 15 seconds
+    timer.it_interval.tv_sec = 15;
+    timer.it_interval.tv_usec = 0;
+
+    setitimer (ITIMER_VIRTUAL, &timer, NULL);
+
+    */
+
+    /* End of server
+    while(close==false){
+
+    }
+
     close(sockfd);
+    */
+
+    close(sockfd);
+
+    return 1;
 }
