@@ -118,14 +118,14 @@ void metadata()
     printf("Beginning Metadata Dump\n");
     account* ptr =(account*) malloc(sizeof(account));
     ptr = global;
-    while(prt->next != NULL){
+    while(ptr->next != NULL){
 
         char* accountname= ptr->name;
         double accountbalance= prt->balance;
         if(ptr->account->flag == true){
-            printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance)
+            printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance);
         }else{
-            printf("%s\t%s\n", accountname,accountbalance)
+            printf("%s\t%s\n", accountname,accountbalance);
         }
     }
     //sem_post(&mutex);
