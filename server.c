@@ -121,6 +121,7 @@ void metadata()
 		printf("global null\n");
 	}
     ptr = global;
+	printf("before");
 	int count =0
 	printf("account number is: %d\n", count);
     while(ptr->next != NULL){
