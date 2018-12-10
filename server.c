@@ -122,7 +122,7 @@ void metadata()
 
         char* accountname= ptr->name;
         double accountbalance= prt->balance;
-        if(ptr->account->flag == true){
+        if(ptr->flag == true){
             printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance);
         }else{
             printf("%s\t%s\n", accountname,accountbalance);
@@ -182,7 +182,7 @@ void func(int sockfd)
         			}
         		}
         	}
-
+			metadata();
      	}
 
      //SERVICE
