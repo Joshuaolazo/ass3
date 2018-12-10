@@ -101,7 +101,7 @@ void metadata(void * args)
             printf("%s\t%s\n", accountname,accountbalance)
         }
     }
-    
+
 
 }
 
@@ -138,17 +138,18 @@ int main(int argc, char const *argv[])
     if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
         printf("socket bind failed...\n");
         exit(0);
-    }
-    else
+    }else{
         printf("Socket successfully binded..\n");
+    }
+
 
     // Now server is ready to listen and verification
     if ((listen(sockfd, 5)) != 0) {
         printf("Listen failed...\n");
         exit(0);
-    }
-    else
+    }else{
         printf("Server listening..\n");
+    }
     len = sizeof(cli);
 
     // Accept the data packet from client and verification
@@ -156,12 +157,14 @@ int main(int argc, char const *argv[])
     if (connfd < 0) {
         printf("server acccept failed...\n");
         exit(0);
-    }
-    else
+    }else{
         printf("server acccept the client...\n");
+    }
+
 
     // Function for chatting between client and server
     func(connfd);
+
 
     // After chatting close the socket
     close(sockfd);

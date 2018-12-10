@@ -1,5 +1,4 @@
 #include "banking.h"
-#include <time.h>
 
 clock_t start = clock();
 bool close = false;
