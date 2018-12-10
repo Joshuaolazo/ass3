@@ -121,7 +121,7 @@ void metadata()
     while(ptr->next != NULL){
 
         char* accountname= ptr->name;
-        double accountbalance= prt->balance;
+        double accountbalance= ptr->balance;
         if(ptr->flag == true){
             printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance);
         }else{
