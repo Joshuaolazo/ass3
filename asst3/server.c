@@ -300,7 +300,7 @@ int main(int argc, char const *argv[])
 		fprintf(stderr, "%s\n", "wrong number of input args");
 	}
     //Initialize sephamore
-    sem_init(&pmutex, 0, 1);
+    //sem_init(&pmutex, 0, 1);
 
     int p = atoi(argv[1]);
 	PORT = &p;
