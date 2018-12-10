@@ -1,6 +1,6 @@
 #include "banking.h"
 
-bool close = false;
+bool terminate = false;
 void func(int sockfd)
 {
     char buff[MAX];
@@ -25,13 +25,14 @@ void func(int sockfd)
 // Function to write commands to server
 void writr(void * args)
 {
-    // type cast args to int
-    int sockfd = (int) args;
+	// type cast args to int
+    int* write_args = (int*) args;
+	int sockfd = *write_args;
     // Initialize buffer
     char buff[MAX];
     int n;
     // Continues to output commands forever
-    while(close == false) {
+    while(terminate == false) {
         bzero(buff, sizeof(buff));
         printf("Enter a command : ");
         n = 0;
@@ -42,31 +43,32 @@ void writr(void * args)
         sleep(2);
     }
 	printf("read pthread exit\n");
-    pthread_exit();
+    pthread_exit(NULL);
 }
 
 // Function to read commands to server
 void readr(void * args)
 {
     // type cast args to int
-    int sockfd = (int) args;
+    int* read_args = (int*) args;
+	int sockfd = *read_args;
     // Initialize buffer
     char buff[MAX];
     // Continues to read messages forever
-    while(close == false){
+    while(terminate == false){
         bzero(buff, sizeof(buff));
         read(sockfd, buff, sizeof(buff));
 
         printf("From Server : %s", buff);
         if ((strncmp(buff, "Server is terminating program, DISCONNECTING\n", 45)) == 0) {
             printf("Client Exiting\n");
-            close = true;
+            terminate = true;
             break;
         }
 
     }
 	printf("write pthread exit\n");
-    pthread_exit();
+    pthread_exit(NULL);
 }
 // main function takes in args: ./client servername port
 int main(int argc, char const *argv[])
@@ -153,23 +155,24 @@ int main(int argc, char const *argv[])
     // idk if attr is necessary
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-
+	int * thread_args;
+	thread_args=&sockfd;
     // idk if attr is necessary
-    if( pthread_create( &send , &attr ,  (void*)&writr , (void*) sockfd ) < 0)
+    if( pthread_create( &send , &attr ,  (void*)&writr , (void*) thread_args ) < 0)
     {
         perror("could not create send thread");
         return -1;
     }
-    if( pthread_create( &recieve , &attr ,  (void*)&readr , (void*) sockfd ) < 0)
+    if( pthread_create( &recieve , &attr ,  (void*)&readr , (void*) thread_args ) < 0)
     {
         perror("could not create recieve thread");
         return -1;
     }
 
     // function for chat
-    pthread_join(send);
-	pthread_join(recieve);
+    pthread_join(send,NULL);
+	pthread_join(recieve,NULL);
 
-    // close the socket
+    // terminate the socket
     close(sockfd);
 }
