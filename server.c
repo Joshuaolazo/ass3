@@ -5,7 +5,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#define MAX 256
+#define MAX 300
 #define PORT 12421
 #define SA struct sockaddr
 
