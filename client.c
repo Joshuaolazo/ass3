@@ -20,6 +20,7 @@ void func(int sockfd)
         while ((buff[n++] = getchar()) != '\n')
             ;
         write(sockfd, buff, sizeof(buff));
+        /*
         bzero(buff, sizeof(buff));
         read(sockfd, buff, sizeof(buff));
         printf("From Server : %s", buff);
@@ -27,6 +28,7 @@ void func(int sockfd)
             printf("Client Exit...\n");
             break;
         }
+        */
     }
 }
 
