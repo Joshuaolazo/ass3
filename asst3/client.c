@@ -122,12 +122,15 @@ int main(int argc, char const *argv[])
         printf("connection with the server failed...trying again in 3 seconds\n");
         sleep(3);
     }
+	printf("connected to the server\n");
+	/*
     if(tries>0){
         printf("connected to the server\n");
     }else{
         printf("connection with the server failed too many times... exiting\n");
         exit(0);
     }
+	*/
 
     // makes two threads for send and recieve
     pthread_t send;
@@ -148,8 +151,8 @@ int main(int argc, char const *argv[])
         perror("could not create recieve thread");
         return -1;
     }
-	printf("send tid: %d\n",send );
-	printf("recieve tid: %d\n",recieve );
+	//printf("send tid: %d\n",send );
+	//printf("recieve tid: %d\n",recieve );
     // function for chat
     pthread_join(send,NULL);
 	pthread_join(recieve,NULL);

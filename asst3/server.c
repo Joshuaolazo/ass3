@@ -296,9 +296,11 @@ void func(int sockfd)
 		else if(strncmp("quit",buff,4)==0){
 			sprintf(buff,"quit\n");
 		}
-		else
-		sprintf(buff,"error: %s does not contain a valid command\n",buff);
-		write(sockfd, buff, sizeof(buff));
+		else{
+			bzero(buff, MAX);
+			sprintf(buff,"error: %s does not contain a valid command\n",buff);
+			write(sockfd, buff, sizeof(buff));
+		}
 	}
 	bzero(buff, MAX);
 	sprintf(buff,"Server is terminating program, DISCONNECTING\n");
