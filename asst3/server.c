@@ -48,7 +48,7 @@ void createAccount(char * input)
 void createClient(pthread_t new, int clientfd)
 {
 	client * pointer = malloc(sizeof(client));
-	client newclient = malloc( sizeof(client));
+	client * newclient = malloc( sizeof(client));
 	newclient->tid = new;
 	newclient->sock = clientfd;
 	newclient->next = NULL;
@@ -134,20 +134,6 @@ void metadata()
     //sem_post(&mutex);
     return;
 }
-void signal_handler(int signum)
-{
-    if(signum== SIGINT){
-		fprintf(stderr, "got control C\n",signum);
-        terminate = true;
-		ender();
-    }/*else if (signum == SIGALARM) {
-        print = true;
-    }*/
-	else{
-        fprintf(stderr, "Recieved a bad signum, got: %d closing anyways\n",signum);
-        terminate = true;
-    }
-}
 void ender()
 {
 	client * pointer = malloc(sizeof(client));
@@ -161,6 +147,21 @@ void ender()
 		// pthread_join(id,NULL);
 	}
 
+}
+
+void signal_handler(int signum)
+{
+    if(signum== SIGINT){
+		fprintf(stderr, "got control C\n",signum);
+        terminate = true;
+		ender();
+    }/*else if (signum == SIGALARM) {
+        print = true;
+    }*/
+	else{
+        fprintf(stderr, "Recieved a bad signum, got: %d closing anyways\n",signum);
+        terminate = true;
+    }
 }
 
 
