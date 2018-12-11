@@ -53,7 +53,7 @@ void createClient(pthread_t new, int clientfd)
 	newclient->sock = clientfd;
 	newclient->next = NULL;
 	if(clientlist==NULL){
-		clientlist= newAccount;
+		clientlist= newclient;
 	}
 	else
 	{
