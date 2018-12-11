@@ -298,7 +298,7 @@ void func(int sockfd)
 		}
 		else{
 			bzero(buff, MAX);
-			sprintf(buff,"error: %s does not contain a valid command\n",buff);
+			sprintf(buff,"error: %s does not contain a valid command\n");
 			write(sockfd, buff, sizeof(buff));
 		}
 	}
