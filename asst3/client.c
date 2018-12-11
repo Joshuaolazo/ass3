@@ -19,6 +19,7 @@ void writr(void * args)
             ;
         write(sockfd, buff, sizeof(buff));
         // after a command is inputed, wait for 2 seconds
+		// maybe not sleep
         sleep(2);
     }
 	printf("read pthread exit\n");
@@ -115,11 +116,11 @@ int main(int argc, char const *argv[])
     servaddr.sin_port = htons(*PORT);
 
     // connect the client socket to server socket tries 15 times
-    int tries = 15;
 
-    while(connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0 && tries>0){
-        printf("connection with the server failed...trying again\n");
-        tries--;
+
+    while(connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0){
+        printf("connection with the server failed...trying again in 3 seconds\n");
+        sleep(3);
     }
     if(tries>0){
         printf("connected to the server\n");
