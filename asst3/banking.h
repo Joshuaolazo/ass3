@@ -34,5 +34,13 @@ typedef struct _account{
 	struct _account * next;
 }account;
 
+// client definition
+typedef struct _client{
+	pthread_t tid;
+	int sock;
+	struct _client * next;
+}client;
+
+
 
 #endif /* banking_h */

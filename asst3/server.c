@@ -1,17 +1,14 @@
 #include "banking.h"
 
 account * global= NULL;
-bool isServiceSession;
+client * clientlist= NULL;
 bool terminate = false;
 
 //want to remove the command and the whitespace
 bool nameAlreadyExists(char * input){
-	//printf("starting name check\n");
 	if(global==NULL){
-	//	printf("namealready global is null\n");
 		return false;
 	}
-	//printf("global is not null\n");
 	account * pointer = malloc(sizeof(account));
 	pointer = global;
 	while(pointer!=NULL){
@@ -31,15 +28,10 @@ void createAccount(char * input)
 	newAccount->flag = false;
 	newAccount->next = NULL;
 	if(global==NULL){
-		//printf("global null\n");
 		global= newAccount;
-		//pointer = newAccount;
-		//printf("newAccount name is: %s\n", newAccount->name);
-		//printf("global first name is: %s\n", global->name);
 	}
 	else
 	{
-		//printf("global not null");
 		//Attach account at end of GLOBAL LL
 		pointer = global;
 		while(pointer->next!=NULL){
@@ -50,40 +42,54 @@ void createAccount(char * input)
 		pointer->next =  newAccount;
 
 	}
+	//free(pointer);
+	return;
+}
+void createClient(pthread_t new, int clientfd)
+{
+	client * pointer = malloc(sizeof(client));
+	client newclient = malloc( sizeof(client));
+	newclient->tid = new;
+	newclient->sock = clientfd;
+	newclient->next = NULL;
+	if(clientlist==NULL){
+		clientlist= newAccount;
+	}
+	else
+	{
+		//Attach account at end of clientlist LL
+		pointer = clientlist;
+		while(pointer->next!=NULL){
+			pointer=pointer->next;
+		}
+		pointer->next =  newclient;
+	}
+	//free(pointer);
 	return;
 }
 
 
 char* trimcommand(char * input, int a){
-
 	int i=0;
 	int k=1;
 	//remove first a letters
 	for(i=0; i<a;i++){
 		for(k=1;k<strlen(input);k++){
 			input[k-1]= input[k];
-			//printf("%s",input);
 			}
 		input[strlen(input)-1] = '\0';
 	}
-
-	//printf("first letters removed: %s\n",input);
 	//remove leading whitespace
 	while(input[0]==' '){
 		for(k=1;k<strlen(input);k++){
 			input[k-1] = input[k];
-			//printf("%s",input);
 		}
-
 		input[strlen(input)-1] = '\0';
 	}
-	//printf("leading whitespace removed: %s\n",input);
 	//remove trailing whitespace
 	while(input[strlen(input)-1]==' '||input[strlen(input)-1]=='\n'){
 		input[strlen(input)-1]= '\0';
-		//printf("removed 1",input);
 	}
-
 	printf("%s\n",input);
 	return input;
 }
@@ -108,24 +114,13 @@ int isNumeric(char* data){
 
 void metadata()
 {
-   	 //sem_wait(&mutex);
-   	 printf("Beginning Metadata Dump\n");
-    	account* ptr =(account*) malloc(sizeof(account));
-	/*
-	if(global == NULL){
-		printf("meta global null\n");
-	}*/
+   	//sem_wait(&mutex);
+   	printf("Beginning Metadata Dump\n");
+    account* ptr =(account*) malloc(sizeof(account));
 	ptr = global;
-	/*
-	if(ptr == NULL){
-		printf("ptr null\n");
-	}
-	*/
 	int count =0;
-	//printf("account number is: %d\n", count);
 	while(ptr != NULL){
 		count++;
-		//printf("account number is: %d\n", count);
         	char* accountname= ptr->name;
         	double accountbalance= ptr->balance;
         	if(ptr->flag == true){
@@ -135,16 +130,16 @@ void metadata()
 
         	}
 		ptr=ptr->next;
-    	}
-
-    	//sem_post(&mutex);
-    	return;
+    }
+    //sem_post(&mutex);
+    return;
 }
 void signal_handler(int signum)
 {
     if(signum== SIGINT){
 		fprintf(stderr, "got control C\n",signum);
         terminate = true;
+		ender();
     }/*else if (signum == SIGALARM) {
         print = true;
     }*/
@@ -153,11 +148,31 @@ void signal_handler(int signum)
         terminate = true;
     }
 }
+void ender()
+{
+	client * pointer = malloc(sizeof(client));
+	pointer = clientlist;
+	while(pointer!=NULL){
+		pthread_t id = pointer->tid;
+		int fd = pointer->sock;
+		close(fd);
+		pthread_cancel(id);
+		// maybe join instead
+		// pthread_join(id,NULL);
+	}
+
+}
 
 
 // Function designed for chat between client and server.
-void func(int sockfd)
+void banking(void * args)
 {
+	// type cast args to int
+    int* client_args = (int*) args;
+	int sockfd = *client_args;
+
+	//Initialize vars
+	bool isServiceSession = false;
 	char buff[MAX];
 	int n;
 	// infinite loop for chat
@@ -311,11 +326,18 @@ void func(int sockfd)
 // Driver function
 int main(int argc, char const *argv[])
 {
+	//Initialize vars
+	global = malloc(sizeof(account));
+	global = NULL;
+	clientlist = malloc(sizeof(client));
+	clientlist = NULL;
 	terminate = false;
 	if( argc != 2){
 		fprintf(stderr, "%s\n", "wrong number of input args");
 	}
-	signal(SIGINT,signal_handler);
+	// for control C
+	//signal(SIGINT,signal_handler);
+
 	//Initialize sephamore
     //sem_init(&pmutex, 0, 1);
 
@@ -357,23 +379,31 @@ int main(int argc, char const *argv[])
 		printf("Server listening..\n");
 	len = sizeof(cli);
 
-	// Accept the data packet from client and verification
-	connfd = accept(sockfd, (SA*)&cli, &len);
-	if (connfd < 0) {
-		printf("server acccept failed...\n");
-		exit(0);
+	// Accepts clients and makes threads
+	while(terminate == false){
+		clientfd = accept(sockfd, (SA*)&cli, &len);
+		if (clientfd < 0) {
+			printf("server acccept failed...\n");
+			continue;
+		}
+		else{
+			printf("server acccept the client...\n");
+		}
+		// pthread prep
+		pthread_t new;
+		// idk if attr is necessary
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		int * thread_args;
+		thread_args=&clientfd;
+		// idk if attr is necessary
+		if( pthread_create( &new , &attr ,  (void*)&banking , (void*) thread_args ) < 0)
+		{
+			perror("could not create send thread");
+			return -1;
+		}
+		createClient(new, clientfd);
 	}
-	else
-		printf("server acccept the client...\n");
-
-	isServiceSession= false;
-	global = malloc(sizeof(account));
-	global = NULL;
-	//printf("entering func\n");
-	// Function for chatting between client and server
-	func(connfd);
-
-	// After chatting close the socket
-	close(sockfd);
+	ender();
 	return 0;
 }

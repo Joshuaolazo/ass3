@@ -40,7 +40,9 @@ void readr(void * args)
         read(sockfd, buff, sizeof(buff));
 
         printf("From Server : %s", buff);
-        if ((strncmp(buff, "Server is terminating program, DISCONNECTING\n", 45)) == 0) {
+		// if server turns off buff recives 0 bytes
+        if (sizeof(buff)== 0) {
+			printf("Server is terminating program, DISCONNECTING\n");
             printf("Client Exiting\n");
             terminate = true;
             break;
@@ -155,7 +157,7 @@ int main(int argc, char const *argv[])
 	//printf("recieve tid: %d\n",recieve );
     // function for chat
     pthread_join(send,NULL);
-	pthread_join(recieve,NULL);
+	pthread_cancel(recieve);
 
     // terminate the socket
     close(sockfd);

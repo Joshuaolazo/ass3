@@ -97,7 +97,7 @@ void metadata(void * args)
     sem_wait(&mutex);
     printf("Beginning Metadata Dump\n");
     Node* ptr =(Node*) malloc(sizeof(Node));
-    prt = LISTOFCLIENTS;
+    prt =
     while(prt->next != NULL){
 
         char* accountname= ptr->account->name;
