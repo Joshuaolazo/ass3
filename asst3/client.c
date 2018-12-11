@@ -34,14 +34,15 @@ void readr(void * args)
 	int sockfd = *read_args;
     // Initialize buffer
     char buff[MAX];
+	int n;
     // Continues to read messages forever
     while(terminate == false){
         bzero(buff, sizeof(buff));
-        read(sockfd, buff, sizeof(buff));
+        int bytes = read(sockfd, buff, sizeof(buff));
 
         printf("From Server : %s", buff);
 		// if server turns off buff recives 0 bytes
-        if ((buff[n++] = getchar()) == '\n') {
+        if (bytes == 0) {
 			printf("Server is terminating program, DISCONNECTING\n");
             printf("Client Exiting\n");
             terminate = true;
