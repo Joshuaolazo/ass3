@@ -313,10 +313,11 @@ void banking(void * args)
 			sprintf(buff,"quit\n");
 		}
 		else{
-			bzero(buff, MAX);
 			sprintf(buff,"error: %s does not contain a valid command\n");
-			write(sockfd, buff, sizeof(buff));
 		}
+			bzero(buff, MAX);
+			write(sockfd, buff, sizeof(buff));
+
 	}
 	bzero(buff, MAX);
 	sprintf(buff,"Server is terminating program, DISCONNECTING\n");
