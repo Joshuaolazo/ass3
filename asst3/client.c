@@ -19,7 +19,7 @@ void writr(void * args)
             ;
         write(sockfd, buff, sizeof(buff));
         // after a command is inputed, wait for 2 seconds
-		// maybe not sleep
+		// maybe not sleepa
         sleep(2);
     }
 	printf("read pthread exit\n");
