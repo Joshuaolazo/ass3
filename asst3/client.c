@@ -1,6 +1,8 @@
 #include "banking.h"
 
 bool terminate = false;
+pthread_t send;
+pthread_t recieve;
 // Function to write commands to server
 void writr(void * args)
 {
@@ -50,7 +52,8 @@ void readr(void * args)
         }
 
     }
-	printf("write pthread exit\n");
+	//printf("write pthread exit\n");
+	pthread_cancel(recieve);
     pthread_exit(NULL);
 }
 // main function takes in args: ./client servername port
@@ -136,8 +139,7 @@ int main(int argc, char const *argv[])
 	*/
 
     // makes two threads for send and recieve
-    pthread_t send;
-    pthread_t recieve;
+
     // idk if attr is necessary
     pthread_attr_t attr;
     pthread_attr_init(&attr);
@@ -158,6 +160,7 @@ int main(int argc, char const *argv[])
 	//printf("recieve tid: %d\n",recieve );
     // function for chat
     pthread_join(send,NULL);
+
 	pthread_cancel(recieve);
 
     // terminate the socket
