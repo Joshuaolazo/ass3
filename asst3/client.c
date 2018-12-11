@@ -41,7 +41,7 @@ void readr(void * args)
 
         printf("From Server : %s", buff);
 		// if server turns off buff recives 0 bytes
-        if (sizeof(buff)== 0) {
+        if ((buff[n++] = getchar()) == '\n') {
 			printf("Server is terminating program, DISCONNECTING\n");
             printf("Client Exiting\n");
             terminate = true;
