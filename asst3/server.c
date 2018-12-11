@@ -346,7 +346,7 @@ int main(int argc, char const *argv[])
 	PORT = &p;
 	printf("port is: %d ", *PORT);
 
-	int sockfd, connfd, len;
+	int sockfd, clientfd, len;
 	struct sockaddr_in servaddr, cli;
 	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
