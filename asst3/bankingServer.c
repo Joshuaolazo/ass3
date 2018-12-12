@@ -93,7 +93,7 @@ char* trimcommand(char * input, int a){
 	while(input[strlen(input)-1]==' '||input[strlen(input)-1]=='\n'){
 		input[strlen(input)-1]= '\0';
 	}
-	printf("%s\n",input);
+
 	return input;
 }
 int isNumeric(char* data){
