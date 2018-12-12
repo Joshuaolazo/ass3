@@ -76,24 +76,20 @@ int main(int argc, char const *argv[])
     int port_int = atoi(argv[2]);
     PORT = &port_int;
 
-    // diagonostic prints
-    printf("port is: %d \n", *PORT);
+    int sockfd;
+    struct sockaddr_in serveraddress;
 
-
-    int sockfd, connfd;
-    struct sockaddr_in servaddr, cli;
-
-    // socket create and verification
+    // Creating socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
-        printf("socket creation failed...\n");
+        printf("Socket Creating Failure, exiting program\n");
         exit(0);
     }else{
-        printf("Socket successfully created..\n");
+        printf("Initial Socket has been created\n");
     }
-    bzero(&servaddr, sizeof(servaddr));
+    bzero(&serveraddress, sizeof(serveraddress));
 
-    // Get IP
+    // Get IP boilerplate
     // Followed Beej.us
     struct addrinfo hints, *res, *p;
     int status;
@@ -103,14 +99,12 @@ int main(int argc, char const *argv[])
     hints.ai_socktype = SOCK_STREAM;
     if ((status = getaddrinfo(argv[1], NULL, &hints, &res)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
-        return 2;
+        exit(0);
     }
-    printf("IP addresses for %s:\n\n", argv[1]);
+	// tries every ip for hostname
     for(p = res;p != NULL; p = p->ai_next) {
         void *addr;
         char *ipver;
-        // get the pointer to the address itself,
-        // different fields in IPv4 and IPv6:
         if (p->ai_family == AF_INET) { // IPv4
             struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
             addr = &(ipv4->sin_addr);
@@ -122,22 +116,20 @@ int main(int argc, char const *argv[])
         }
         // convert the IP to a string and print it:
         inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
-        printf("  %s: %s\n", ipver, ipstr);
     }
     freeaddrinfo(res); // free the linked list of ips
 
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr(ipstr);
-    servaddr.sin_port = htons(*PORT);
+    serveraddress.sin_family = AF_INET;
+    serveraddress.sin_addr.s_addr = inet_addr(ipstr);
+    serveraddress.sin_port = htons(*PORT);
 
-    // connect the client socket to server socket tries 15 times
+    // connect the client socket to server socket tries unlimited times
 
-
-    while(connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0){
-        printf("connection with the server failed...trying again in 3 seconds\n");
+    while(connect(sockfd, (SA*)&serveraddress, sizeof(serveraddress)) != 0){
+        printf("Server Client Connection Failure trying again in 3 seconds\n");
         sleep(3);
     }
-	printf("connected to the server\n");
+	printf("Connected to the server!\n");
 
     // makes two threads for send and recieve
     pthread_t send;
@@ -149,17 +141,16 @@ int main(int argc, char const *argv[])
 	t_arg->readtid = recieve;
 	t_arg->writetid = send;
 	t_arg->sockfd = sockfd;
-    // idk if attr is necessary
 	if( pthread_create( &recieve , &attr ,  (void*)&readr , (void*) t_arg ) < 0)
 	{
 		perror("could not create recieve thread");
-		return -1;
+		exit(0);
 	}
 	t_arg->readtid = recieve;
     if( pthread_create( &send , &attr ,  (void*)&writr , (void*) t_arg ) < 0)
     {
         perror("could not create send thread");
-        return -1;
+        exit(0);
     }
 	t_arg->readtid = recieve;
 	t_arg->writetid = send;

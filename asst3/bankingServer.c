@@ -371,10 +371,10 @@ int main(int argc, char const *argv[])
 	// Initialize Vars for connecting
 	int length;
 	int sockfd;
-	int clientfd,
+	int clientfd;
 
 	struct sockaddr_in serveraddress;
-	struct sockaddr_in cli;
+	struct sockaddr_in clientaddress;
 	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	// socket returns -1 if failed
