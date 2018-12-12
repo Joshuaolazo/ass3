@@ -380,43 +380,65 @@ int main(int argc, char const *argv[])
 	int p = atoi(argv[1]);
 	PORT = &p;
 	printf("port is: %d ", *PORT);
-
-	int sockfd, clientfd, len;
+		
+	int len;
+	int sockfd;
+	int clientfd,
+	
 	struct sockaddr_in servaddr, cli;
 	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd == -1) {
+	
+	if (sockfd == -1){
 		printf("Socket could not be created . . .\n");
+		
+		//EXIT
 		exit(0);
 	}
-	else
-		printf("Socket has been successfully created . . .\n");
+		else{
+			printf("Socket has been successfully created . . .\n");
+		}
+	
 	bzero(&servaddr, sizeof(servaddr));
 
 	// assign IP, PORT
+	
 	servaddr.sin_family = AF_INET;
+	
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	servaddr.sin_port = htons(*PORT);
 
 	// Binding newly created socket to given IP and verification
-	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
+	if (!((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) == 0)) {
 		printf("Socket failed to be binded . . .\n");
+		
+		//EXIT
  		exit(0);
 	}
-	else
+	
+	else{
 		printf("Socket has been successfully binded . . .\n");
-
+	}
+	
 	originalfd = sockfd;
 	// Now server is ready to listen and verification
-	if ((listen(sockfd, 5)) != 0) {
+	if (!((listen(sockfd, 5)) == 0)) {
 		printf("Server listen has failed . . .\n");
+		
+		//EXIT
  		exit(0);
 	}
-	else
+	
+	else{
 		printf("Server is now listening . . .\n");
+	}
+	
 	len = sizeof(cli);
+	
+	//For 15second alarm
 	pthread_t printid;
 	pthread_create(&printid,NULL,&print,NULL);
+	
 	// Accepts clients and makes threads
 	while(terminate == false){
 		clientfd = accept(sockfd, (SA*)&cli, &len);
