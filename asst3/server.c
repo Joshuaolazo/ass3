@@ -369,7 +369,7 @@ int main(int argc, char const *argv[])
 	clientlist = NULL;
 	terminate = false;
 	if( argc != 2){
-		fprintf(stderr, "%s\n", "wrong number of input args");
+		fprintf(stderr, "%s\n", "Wrong number of input args.");
 	}
 	// for control C
 	signal(SIGINT,signal_handler);
@@ -386,11 +386,11 @@ int main(int argc, char const *argv[])
 	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd == -1) {
-		printf("socket creation failed...\n");
+		printf("Socket could not be created . . .\n");
 		exit(0);
 	}
 	else
-		printf("Socket successfully created..\n");
+		printf("Socket has been successfully created . . .\n");
 	bzero(&servaddr, sizeof(servaddr));
 
 	// assign IP, PORT
@@ -400,20 +400,20 @@ int main(int argc, char const *argv[])
 
 	// Binding newly created socket to given IP and verification
 	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
-		printf("socket bind failed...\n");
+		printf("Socket failed to be binded . . .\n");
  		exit(0);
 	}
 	else
-		printf("Socket successfully binded..\n");
+		printf("Socket has been successfully binded . . .\n");
 
 	originalfd = sockfd;
 	// Now server is ready to listen and verification
 	if ((listen(sockfd, 5)) != 0) {
-		printf("Listen failed...\n");
+		printf("Server listen has failed . . .\n");
  		exit(0);
 	}
 	else
-		printf("Server listening..\n");
+		printf("Server is now listening . . .\n");
 	len = sizeof(cli);
 	pthread_t printid;
 	pthread_create(&printid,NULL,&print,NULL);
@@ -421,11 +421,11 @@ int main(int argc, char const *argv[])
 	while(terminate == false){
 		clientfd = accept(sockfd, (SA*)&cli, &len);
 		if (clientfd < 0) {
-			printf("server acccept failed...\n");
+			printf("Server has failed to accept the client . . .\n");
 			continue;
 		}
 		else{
-			printf("server acccept the client...\n");
+			printf("Server is now accepting the client . . .\n");
 		}
 		// pthread prep
 		pthread_t new;
@@ -437,7 +437,7 @@ int main(int argc, char const *argv[])
 		// idk if attr is necessary
 		if( pthread_create( &new , &attr ,  (void*)&banking , (void*) thread_args ) < 0)
 		{
-			perror("could not create send thread");
+			perror("Could not create Send Thread.");
 			return -1;
 		}
 		createClient(new, clientfd);
