@@ -5,6 +5,7 @@ client * clientlist= NULL;
 bool terminate = false;
 // sephamore to stop all threads for print
 sem_t pmutex;
+int originalfd;
 
 //want to remove the command and the whitespace
 bool nameAlreadyExists(char * input){
@@ -118,39 +119,47 @@ int isNumeric(char* data){
 
 void metadata()
 {
-   	sem_wait(&pmutex);
-   	printf("Beginning Metadata Dump\n");
-    account* ptr =(account*) malloc(sizeof(account));
+
+   	 printf("-------------------------------\n");
+    	account* ptr;
+
 	ptr = global;
 	int count =0;
+	//printf("account number is: %d\n", count);
 	while(ptr != NULL){
 		count++;
+		//printf("account number is: %d\n", count);
         	char* accountname= ptr->name;
         	double accountbalance= ptr->balance;
         	if(ptr->flag == true){
-          		 printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance);
+          		 printf("%s\t%f\tIN SERVICE\n", accountname,accountbalance);
         	}else{
             		printf("%s\t%f\n", accountname,accountbalance);
 
         	}
 		ptr=ptr->next;
-    }
-    sem_post(&pmutex);
-    return;
+    	}
+
+
+    	return;
 }
 void ender()
 {
 	client * pointer = malloc(sizeof(client));
 	pointer = clientlist;
+	char buff[MAX];
 	while(pointer!=NULL){
 		pthread_t id = pointer->tid;
 		int fd = pointer->sock;
+		buff = "Server is terminating program, DISCONNECTING\n";
+		write(fd, buff, sizeof(buff));
 		close(fd);
 		pthread_cancel(id);
 		// maybe join instead
 		// pthread_join(id,NULL);
 	}
-
+	close(originalfd);
+	exit(0);
 }
 
 void signal_handler(int signum)
@@ -159,6 +168,7 @@ void signal_handler(int signum)
 		fprintf(stderr, "got control C\n",signum);
         terminate = true;
 		ender();
+
     }/*else if (signum == SIGALARM) {
         print = true;
     }*/
@@ -166,6 +176,16 @@ void signal_handler(int signum)
         fprintf(stderr, "Recieved a bad signum, got: %d closing anyways\n",signum);
         terminate = true;
     }
+}
+void* print(void* arg){
+	while(true){
+	sem_wait(&mutex);
+	printf(">>>>>>>List of Accounts:<<<<<<<\n");
+	metadata();
+	printf(">>>>>>>>>>End of List<<<<<<<<<<\n");
+	sem_post(&mutex);
+	sleep(15);
+	}
 }
 
 
@@ -320,9 +340,14 @@ void banking(void * args)
 
 		//QUIT
 		else if(strncmp("quit",buff,4)==0){
-			sprintf(buff,"quit\n");
+			if(example->flag){
+				example->flag = false;
+				isServiceSession = false;
+			}
+			sprintf(buff,"Client has been disconnected.\n");
 		}
 		else{
+			strcpy(inputcopy,trimcommand(inputcopy,0));
 			sprintf(buff,"error: %s does not contain a valid command\n",inputcopy);
 		}
 			write(sockfd, buff, sizeof(buff));
@@ -381,6 +406,7 @@ int main(int argc, char const *argv[])
 	else
 		printf("Socket successfully binded..\n");
 
+	originalfd = sockfd;
 	// Now server is ready to listen and verification
 	if ((listen(sockfd, 5)) != 0) {
 		printf("Listen failed...\n");
@@ -389,7 +415,8 @@ int main(int argc, char const *argv[])
 	else
 		printf("Server listening..\n");
 	len = sizeof(cli);
-
+	pthread_t printid;
+	pthread_create(&printid,NULL,&print,NULL);
 	// Accepts clients and makes threads
 	while(terminate == false){
 		clientfd = accept(sockfd, (SA*)&cli, &len);

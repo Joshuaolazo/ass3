@@ -39,25 +39,31 @@ void readr(void * args)
 	int n;
     // Continues to read messages forever
     while(terminate == false){
-        bzero(buff, sizeof(buff));
-        int bytes = read(sockfd, buff, sizeof(buff));
+		bzero(buff, sizeof(buff));
+		int bytes = read(sockfd, buff, sizeof(buff));
 
-        printf("From Server : %s", buff);
+		printf("From Server : %s", buff);
 		// if server turns off buff recives 0 bytes
-        if (bytes == 0) {
+        if (bytes == 0 ) {
 			printf("Server is terminating program, DISCONNECTING\n");
-            printf("Client Exiting\n");
+			printf("Client Exiting\n");
             terminate = true;
 			close(sockfd);
-			printf("canceling: %i\n",in_args->writetid );
+			//printf("canceling: %i\n",in_args->writetid );
 			pthread_cancel(in_args->writetid);
 			pthread_exit(NULL);
             break;
         }
-
-
+		if (strcmp( buff, "Client has been disconnected.\n", 30)==0){
+			printf("Client Exiting\n");
+			terminate = true;
+			close(sockfd);
+			//printf("canceling: %i\n",in_args->writetid );
+			pthread_cancel(in_args->writetid);
+			pthread_exit(NULL);
+			break;
+		}
     }
-	//printf("write pthread exit\n");
     pthread_exit(NULL);
 }
 // main function takes in args: ./client servername port
@@ -145,21 +151,24 @@ int main(int argc, char const *argv[])
 	t_arg->writetid = send;
 	t_arg->sockfd = sockfd;
     // idk if attr is necessary
+	if( pthread_create( &recieve , &attr ,  (void*)&readr , (void*) t_arg ) < 0)
+	{
+		perror("could not create recieve thread");
+		return -1;
+	}
+	t_arg->readtid = recieve;
     if( pthread_create( &send , &attr ,  (void*)&writr , (void*) t_arg ) < 0)
     {
         perror("could not create send thread");
         return -1;
     }
-    if( pthread_create( &recieve , &attr ,  (void*)&readr , (void*) t_arg ) < 0)
-    {
-        perror("could not create recieve thread");
-        return -1;
-    }
+	t_arg->readtid = recieve;
+	t_arg->writetid = send;
+
 	//printf("send tid: %d\n",send );
 	//printf("recieve tid: %d\n",recieve );
     // function for chat
     pthread_join(send,NULL);
-	printf("hey");
 	pthread_cancel(recieve);
 
     // terminate the socket
