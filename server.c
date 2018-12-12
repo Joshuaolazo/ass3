@@ -5,6 +5,9 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <signal.h>
+#include <unistd.h>
+#include <pthread.h>
 #define MAX 300
 #define PORT 12421
 #define SA struct sockaddr
@@ -12,7 +15,7 @@
 
 //basic boolean definition
 typedef enum { false, true } bool;
-
+void* print(void* arg);
 typedef struct _account{
 	char * name;
 	double balance;
@@ -103,7 +106,7 @@ char* trimcommand(char * input, int a){
 		//printf("removed 1",input);
 	}
 
-	printf("%s\n",input);
+	//printf("%s\n",input);
 	return input;
 }
 int isNumeric(char* data){
@@ -128,18 +131,10 @@ int isNumeric(char* data){
 void metadata()
 {
    	 //sem_wait(&mutex);
-   	 printf("Beginning Metadata Dump\n");
-    	account* ptr =(account*) malloc(sizeof(account));
-	/*
-	if(global == NULL){
-		printf("meta global null\n");
-	}*/	
+   	 printf("-------------------------------\n");
+    	account* ptr;
+	
 	ptr = global;
-	/*
-	if(ptr == NULL){
-		printf("ptr null\n");
-	}
-	*/
 	int count =0;
 	//printf("account number is: %d\n", count);
 	while(ptr != NULL){
@@ -148,7 +143,7 @@ void metadata()
         	char* accountname= ptr->name;
         	double accountbalance= ptr->balance;
         	if(ptr->flag == true){
-          		 printf("%s\t%s\tIN SERVICE\n", accountname,accountbalance);
+          		 printf("%s\t%f\tIN SERVICE\n", accountname,accountbalance);
         	}else{
             		printf("%s\t%f\n", accountname,accountbalance);
 			
@@ -159,6 +154,27 @@ void metadata()
     	//sem_post(&mutex);
     	return;
 }
+
+void* print(void* arg){
+	while(true){
+	//pthread_mutex_lock(&...);
+	printf(">>>>>>>List of Accounts:<<<<<<<\n");
+	metadata();
+	printf(">>>>>>>>>>End of List<<<<<<<<<<\n");
+	//pthread_mutex_unlock(&...);
+	sleep(15);
+	}
+}
+//ALARM
+/*
+void on_alarm(int signum)
+{
+    metadata();
+    if(!done)
+        alarm(15);  // Reschedule alarm
+}
+*/
+
 
 // Function designed for chat between client and server.
 void func(int sockfd)
@@ -212,7 +228,6 @@ void func(int sockfd)
         			}
         		}
         	}
-			metadata();
      	}
 
      //SERVICE
@@ -302,7 +317,7 @@ void func(int sockfd)
        	 	else{
         			example->flag = false;
         			isServiceSession = false;
-       			sprintf(buff,"Account with name: --%s-- :is now OUT OF service\n",inputcopy);
+       			sprintf(buff,"Account with name: --%s-- :is now OUT OF service\n",example->name);
        	}
      }
 
@@ -310,11 +325,27 @@ void func(int sockfd)
         else if(strncmp("quit",buff,4)==0){
       	  sprintf(buff,"quit\n");
      }
-        else
-       	 sprintf(buff,"error: %s does not contain a valid command\n",buff);
+        else{
+        	strcpy(inputcopy,trimcommand(inputcopy,0));
+       	 sprintf(buff,"error: --%s-- does not contain a valid command\n",inputcopy);
+				}
 
+				//metadata();
+				/*
+				// Setup on_alarm as a signal handler for the SIGALRM signal
+				struct sigaction act;
+				act.sa_handler = &on_alarm;
+				act.sa_mask = 0;
+				act.sa_flags = SA_RESTART;  // Restart interrupted system calls
+				sigaction(SIGALRM, &act, NULL);
 
-
+				alarm(15);  // Setup initial alarm				
+				*/
+				
+				
+				
+							
+			//bzero(buff, MAX);
 			 write(sockfd, buff, sizeof(buff));
 
 
@@ -383,17 +414,20 @@ int main()
     // Accept the data packet from client and verification
     connfd = accept(sockfd, (SA*)&cli, &len);
     if (connfd < 0) {
-        printf("server acccept failed...\n");
+        printf("server accept failed...\n");
         exit(0);
     }
     else
-        printf("server acccept the client...\n");
+        printf("server accept the client...\n");
 
       isServiceSession= false;
 		global = malloc(sizeof(account));
-	global = NULL;
+		global = NULL;
 	//printf("entering func\n");
-    // Function for chatting between client and server
+		
+	pthread_t tid;
+	pthread_create(&tid,NULL,&print,NULL);
+    
     func(connfd);
 
     // After chatting close the socket
