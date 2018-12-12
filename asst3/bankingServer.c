@@ -1,5 +1,6 @@
 #include "banking.h"
 
+// Initialize Global Vars
 account * global= NULL;
 client * clientlist= NULL;
 bool terminate = false;
@@ -41,9 +42,7 @@ void createAccount(char * input)
 			pointer=pointer->next;
 			printf("%s->%s\n",pointer->name,pointer->flag);
 		}
-
 		pointer->next =  newAccount;
-
 	}
 	sem_post(&pmutex);
 	//free(pointer);
@@ -143,15 +142,12 @@ void ender()
 	while(pointer!=NULL){
 		pthread_t id = pointer->tid;
 		int fd = pointer->sock;
-		//printf("closing  tid: %d, sockfd: %d \n",id,fd);
 		fflush(stdin);
 		write(fd, buff, sizeof(buff));
 		close(fd);
 		pthread_cancel(id);
 		pointer= pointer->next;
-		// pthread_join(id,NULL);
 	}
-	
 	close(originalfd);
 	exit(0);
 }
@@ -159,13 +155,10 @@ void ender()
 void signal_handler(int signum)
 {
 	if(signum== SIGINT){
-		//fprintf(stderr, "got control C\n",signum);
 		terminate = true;
 		ender();
 
-	}/*else if (signum == SIGALARM) {
-        print = true;
-    }*/
+	}
 	else{
 		fprintf(stderr, "Recieved a bad signum, got: %d closing anyways\n",signum);
 		terminate = true;
@@ -360,8 +353,10 @@ int main(int argc, char const *argv[])
 	clientlist = malloc(sizeof(client));
 	clientlist = NULL;
 	terminate = false;
-	if( argc != 2){
-		fprintf(stderr, "%s\n", "wrong number of input args");
+	// server needs port
+	if( argc != 2)
+	{
+		fprintf(stderr, "%s\n", "Wrong number of input args.");
 	}
 	// for control C
 	signal(SIGINT,signal_handler);
@@ -369,57 +364,75 @@ int main(int argc, char const *argv[])
 	//Initialize sephamore
     sem_init(&pmutex, 0, 1);
 
+	// Set port
 	int p = atoi(argv[1]);
 	PORT = &p;
-	printf("port is: %d ", *PORT);
 
-	int sockfd, clientfd, len;
-	struct sockaddr_in servaddr, cli;
+	// Initialize Vars for connecting
+	int length;
+	int sockfd;
+	int clientfd,
+
+	struct sockaddr_in serveraddress;
+	struct sockaddr_in cli;
 	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd == -1) {
-		printf("socket creation failed...\n");
+	// socket returns -1 if failed
+	if (sockfd == -1)
+	{
+		printf("Socket Creating Failure, exiting program\n");
+		// If socket cannot be created fatal error
 		exit(0);
 	}
-	else
-		printf("Socket successfully created..\n");
-	bzero(&servaddr, sizeof(servaddr));
+	else{
+		printf("Initial Socket has been created\n");
+	}
+	bzero(&serveraddress, sizeof(serveraddress));
+	// set the port and IP, Address is for any 4 or 6
+	serveraddress.sin_family = AF_INET;
+	serveraddress.sin_addr.s_addr = htonl(INADDR_ANY);
+	serveraddress.sin_port = htons(*PORT);
 
-	// assign IP, PORT
-	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	servaddr.sin_port = htons(*PORT);
-
-	// Binding newly created socket to given IP and verification
-	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
-		printf("socket bind failed...\n");
+	// Bind socket to address
+	if (!((bind(sockfd, (SA*)&serveraddress, sizeof(serveraddress))) == 0))
+	{
+		// If socket cannot be binded fatal error
+		printf("Socket Binding Failure, exiting program\n");
  		exit(0);
 	}
-	else
-		printf("Socket successfully binded..\n");
-
+	else{
+		printf("Inital Socket has been Bound\n");
+	}
+	// holds socket for closing later
 	originalfd = sockfd;
-	// Now server is ready to listen and verification
-	if ((listen(sockfd, 5)) != 0) {
-		printf("Listen failed...\n");
+
+	// make socket listen
+	if (!((listen(sockfd, 5)) == 0)) {
+		// If socket cannot be listen fatal error
+		printf("Socket Listening Failure, exiting program\n");
  		exit(0);
 	}
-	else
-		printf("Server listening..\n");
-	len = sizeof(cli);
+	else{
+		printf("Server is now Listening for clients\n");
+	}
+
+	length = sizeof(clientaddress);
+
+	//For 15 second alarm
 	pthread_t printid;
 	pthread_create(&printid,NULL,&print,NULL);
+
 	// Accepts clients and makes threads
 	while(terminate == false){
-		clientfd = accept(sockfd, (SA*)&cli, &len);
-		if (clientfd < 0) {
-			printf("server acccept failed...\n");
+		clientfd = accept(sockfd, (SA*)&clientaddress, &length);
+		if (clientfd < 0)
+		{
+			printf("Server Client Connection Failure, keep listening\n");
 			continue;
 		}
 		else{
-			printf("server acccept the client...\n");
+			printf("New Client!\n");
 		}
-		
 		// pthread prep
 		pthread_t new;
 		// idk if attr is necessary
@@ -430,8 +443,8 @@ int main(int argc, char const *argv[])
 		// idk if attr is necessary
 		if( pthread_create( &new , &attr ,  (void*)&banking , (void*) thread_args ) < 0)
 		{
-			perror("could not create send thread");
-			return -1;
+			perror("Could not new client Thread.");
+			continue;
 		}
 		createClient(new, clientfd);
 	}

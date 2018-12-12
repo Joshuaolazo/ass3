@@ -43,18 +43,17 @@ void readr(void * args)
 		int bytes = read(sockfd, buff, sizeof(buff));
 
 		printf("From Server : %s", buff);
-		// if server turns off buff recives 0 bytes
-		if (bytes == 0 ) {
-			printf("Server disconnected, bytes recieved 0\n");
+		// if server turns off buff recives 0 bytes or sent message to exit
+		if (strcmp( buff, "Client has been disconnected.\n")==0 || strcmp( buff, "Server is terminating program, DISCONNECTING\n")==0){
 			printf("Client Exiting\n");
 			terminate = true;
 			close(sockfd);
-			//printf("canceling: %i\n",in_args->writetid );
 			pthread_cancel(in_args->writetid);
 			pthread_exit(NULL);
 			break;
 		}
-		if (strcmp( buff, "Client has been disconnected.\n")==0){
+		if (bytes == 0 ) {
+			printf("Server disconnected, bytes recieved 0\n");
 			printf("Client Exiting\n");
 			terminate = true;
 			close(sockfd);
