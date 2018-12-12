@@ -1,10 +1,10 @@
-all: client server
+all: bankingClient bankingServer
 
-client: bankingClient.c
-	gcc bankingClient.c -g -pthread -o bankingClient
+bankingClient: bankingClient.c
+	gcc bankingClient.c -pthread -o bankingClient
 
-server: bankingServer.c
-	gcc bankingServer.c -g -pthread -o bankingServer
+bankingServer: bankingServer.c
+	gcc bankingServer.c -pthread -o bankingServer
 
 clean:
 	rm -rf bankingClient bankingServer
