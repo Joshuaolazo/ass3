@@ -17,9 +17,8 @@ bool nameAlreadyExists(char * input){
 	while(pointer!=NULL){
 		if(strcmp(input,pointer->name)==0)
 			return true;
-
 		pointer = pointer->next;
-		}
+	}
 	return false;
 }
 void createAccount(char * input)
@@ -119,28 +118,21 @@ int isNumeric(char* data){
 
 void metadata()
 {
-
-   	 printf("-------------------------------\n");
-    	account* ptr;
-
+	printf("-------------------------------\n");
+    account* ptr;
 	ptr = global;
 	int count =0;
-	//printf("account number is: %d\n", count);
 	while(ptr != NULL){
 		count++;
-		//printf("account number is: %d\n", count);
-        	char* accountname= ptr->name;
-        	double accountbalance= ptr->balance;
-        	if(ptr->flag == true){
-          		 printf("%s\t%f\tIN SERVICE\n", accountname,accountbalance);
-        	}else{
-            		printf("%s\t%f\n", accountname,accountbalance);
-
-        	}
+		char* accountname= ptr->name;
+		double accountbalance= ptr->balance;
+		if(ptr->flag == true){
+			printf("%s\t%f\tIN SERVICE\n", accountname,accountbalance);
+		}else{
+			printf("%s\t%f\n", accountname,accountbalance);
+		}
 		ptr=ptr->next;
-    	}
-
-
+    }
     	return;
 }
 void ender()
@@ -151,12 +143,14 @@ void ender()
 	while(pointer!=NULL){
 		pthread_t id = pointer->tid;
 		int fd = pointer->sock;
+		fflush(fd);
 		write(fd, buff, sizeof(buff));
 		close(fd);
 		pthread_cancel(id);
 		// maybe join instead
 		// pthread_join(id,NULL);
 	}
+	printf("all closed");
 	close(originalfd);
 	exit(0);
 }
@@ -198,7 +192,6 @@ void banking(void * args)
 	//Initialize vars
 	bool isServiceSession = false;
 	char buff[MAX];
-	int n;
 	// infinite loop for chat
 	while (terminate == false) {
 		bzero(buff, MAX);
@@ -247,7 +240,6 @@ void banking(void * args)
 					}
 				}
 			}
-			//metadata();
 		}
 
 		//SERVICE
