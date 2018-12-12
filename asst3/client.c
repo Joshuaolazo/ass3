@@ -1,12 +1,14 @@
 #include "banking.h"
 
+
+
 bool terminate = false;
 // Function to write commands to server
 void writr(void * args)
 {
 	// type cast args to int
-    int* write_args = (int*) args;
-	int sockfd = *write_args;
+	thread_args * in_args = (thread_args *) args;
+	int sockfd = in_args->sockfd;
     // Initialize buffer
     char buff[MAX];
     int n;
@@ -30,8 +32,8 @@ void writr(void * args)
 void readr(void * args)
 {
     // type cast args to int
-    int* read_args = (int*) args;
-	int sockfd = *read_args;
+    thread_args * in_args = (thread_args *) args;
+	int sockfd = in_args->sockfd;
     // Initialize buffer
     char buff[MAX];
 	int n;
@@ -47,6 +49,7 @@ void readr(void * args)
             printf("Client Exiting\n");
             terminate = true;
 			close(sockfd);
+			pthread_cancel(in_args->readtid);
 			pthread_exit(NULL);
             break;
         }
@@ -136,15 +139,17 @@ int main(int argc, char const *argv[])
     // idk if attr is necessary
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-	int * thread_args;
-	thread_args=&sockfd;
+	thread_args * t_arg = malloc(sizeof(thread_args));
+	t_arg->readtid = recieve;
+	t_arg->writetid = send;
+	t_arg->sockfd = sockfd;
     // idk if attr is necessary
-    if( pthread_create( &send , &attr ,  (void*)&writr , (void*) thread_args ) < 0)
+    if( pthread_create( &send , &attr ,  (void*)&writr , (void*) t_arg ) < 0)
     {
         perror("could not create send thread");
         return -1;
     }
-    if( pthread_create( &recieve , &attr ,  (void*)&readr , (void*) thread_args ) < 0)
+    if( pthread_create( &recieve , &attr ,  (void*)&readr , (void*) t_arg ) < 0)
     {
         perror("could not create recieve thread");
         return -1;

@@ -190,10 +190,10 @@ void banking(void * args)
 		//My shitty code
 
 		//example account created set to flagged account if not last node
-		sem_wait(&pmutex);
+		//sem_wait(&pmutex);
 		account * example;
 		example = global;
-		sem_post(&pmutex);
+		//sem_post(&pmutex);
 		bool flagFound = false;
 
 		while(example!=NULL){
@@ -236,6 +236,7 @@ void banking(void * args)
 			strcpy(inputcopy,trimcommand(inputcopy,5));
 
 			//FIND ACCOUNT TO SERVICE BY NAME
+			sem_wait(&pmutex);
 			bool nameMatch = false;
 			example = global;
 			while(example!=NULL){
@@ -245,6 +246,7 @@ void banking(void * args)
 				}
 				example = example->next;
 			}
+			sem_post(&pmutex);
 			//if Name NOT FOUND
 			if(!nameMatch)
 				sprintf(buff,"Account name to be serviced cannot be found.\n");
@@ -252,8 +254,10 @@ void banking(void * args)
 				if(example->flag||isServiceSession)		//Might need to differentiate between single service on client, and no concurrent serve on same account across multiple clients.
 					sprintf(buff,"Error: Cannot service. An account is already in a service session.\n");
 				else{
+					sem_wait(&pmutex);
 					example->flag = true;
 					isServiceSession = true;
+					sem_post(&pmutex);
 					sprintf(buff,"Account with name: --%s-- :is now IN service\n",inputcopy);
 				}
 			}

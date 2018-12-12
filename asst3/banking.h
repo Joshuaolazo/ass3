@@ -42,6 +42,10 @@ typedef struct _client{
 	struct _client * next;
 }client;
 
-
+typedef struct _thread_args{
+	int sockfd;
+	pthread_t readtid;
+	pthread_t writetid;
+}thread_args;
 
 #endif /* banking_h */
