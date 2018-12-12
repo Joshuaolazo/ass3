@@ -323,13 +323,26 @@ void func(int sockfd)
 
      //QUIT
         else if(strncmp("quit",buff,4)==0){
-      	  sprintf(buff,"quit\n");
+        	
+        	//If In service, Ends service before quitting
+        		if(example->flag){
+					example->flag = false;
+					isServiceSession = false;        		
+        		}
+				        		
+
+      	  sprintf(buff,"Client has been disconnected.\n");
+      	  
+      	  
+      	  //Disconnect code
+      	  
+      	  
      }
         else{
         	strcpy(inputcopy,trimcommand(inputcopy,0));
        	 sprintf(buff,"error: --%s-- does not contain a valid command\n",inputcopy);
 				}
-
+				
 				//metadata();
 				/*
 				// Setup on_alarm as a signal handler for the SIGALRM signal
