@@ -386,63 +386,110 @@ void func(int sockfd)
 }
 
 // Driver function
-int main()
+int main(int argc, char const *argv[])
 {
+	//Initialize vars
+	global = malloc(sizeof(account));
+	global = NULL;
+	clientlist = malloc(sizeof(client));
+	clientlist = NULL;
+	terminate = false;
+	if( argc != 2){
+		fprintf(stderr, "%s\n", "Wrong number of input args.");
+	}
+	// for control C
+	signal(SIGINT,signal_handler);
 
-    int sockfd, connfd, len;
-    struct sockaddr_in servaddr, cli;
+	//Initialize sephamore
+    sem_init(&pmutex, 0, 1);
 
-    // socket create and verification
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        printf("socket creation failed...\n");
-        exit(0);
-    }
-    else
-        printf("Socket successfully created..\n");
-    bzero(&servaddr, sizeof(servaddr));
-
-    // assign IP, PORT
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(PORT);
-
-    // Binding newly created socket to given IP and verification
-    if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
-        printf("socket bind failed...\n");
-        exit(0);
-    }
-    else
-        printf("Socket successfully binded..\n");
-
-    // Now server is ready to listen and verification
-    if ((listen(sockfd, 5)) != 0) {
-        printf("Listen failed...\n");
-        exit(0);
-    }
-    else
-        printf("Server listening..\n");
-    len = sizeof(cli);
-
-    // Accept the data packet from client and verification
-    connfd = accept(sockfd, (SA*)&cli, &len);
-    if (connfd < 0) {
-        printf("server accept failed...\n");
-        exit(0);
-    }
-    else
-        printf("server accept the client...\n");
-
-      isServiceSession= false;
-		global = malloc(sizeof(account));
-		global = NULL;
-	//printf("entering func\n");
+	int p = atoi(argv[1]);
+	PORT = &p;
+	printf("port is: %d ", *PORT);
 		
-	pthread_t tid;
-	pthread_create(&tid,NULL,&print,NULL);
-    
-    func(connfd);
+	int len;
+	int sockfd;
+	int clientfd,
+	
+	struct sockaddr_in servaddr, cli;
+	// socket create and verification
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	
+	if (sockfd == -1){
+		printf("Socket could not be created . . .\n");
+		
+		//EXIT
+		exit(0);
+	}
+		else{
+			printf("Socket has been successfully created . . .\n");
+		}
+	
+	bzero(&servaddr, sizeof(servaddr));
 
-    // After chatting close the socket
-    close(sockfd);
+	// assign IP, PORT
+	
+	servaddr.sin_family = AF_INET;
+	
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	servaddr.sin_port = htons(*PORT);
+
+	// Binding newly created socket to given IP and verification
+	if (!((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) == 0)) {
+		printf("Socket failed to be binded . . .\n");
+		
+		//EXIT
+ 		exit(0);
+	}
+	
+	else{
+		printf("Socket has been successfully binded . . .\n");
+	}
+	
+	originalfd = sockfd;
+	// Now server is ready to listen and verification
+	if (!((listen(sockfd, 5)) == 0)) {
+		printf("Server listen has failed . . .\n");
+		
+		//EXIT
+ 		exit(0);
+	}
+	
+	else{
+		printf("Server is now listening . . .\n");
+	}
+	
+	len = sizeof(cli);
+	
+	//For 15second alarm
+	pthread_t printid;
+	pthread_create(&printid,NULL,&print,NULL);
+	
+	// Accepts clients and makes threads
+	while(terminate == false){
+		clientfd = accept(sockfd, (SA*)&cli, &len);
+		if (clientfd < 0) {
+			printf("Server has failed to accept the client . . .\n");
+			continue;
+		}
+		else{
+			printf("Server is now accepting the client . . .\n");
+		}
+		// pthread prep
+		pthread_t new;
+		// idk if attr is necessary
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		int * thread_args;
+		thread_args=&clientfd;
+		// idk if attr is necessary
+		if( pthread_create( &new , &attr ,  (void*)&banking , (void*) thread_args ) < 0)
+		{
+			perror("Could not create Send Thread.");
+			return -1;
+		}
+		createClient(new, clientfd);
+	}
+	ender();
+	return 0;
 }
