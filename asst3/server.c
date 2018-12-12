@@ -347,7 +347,7 @@ int main(int argc, char const *argv[])
 		fprintf(stderr, "%s\n", "wrong number of input args");
 	}
 	// for control C
-	//signal(SIGINT,signal_handler);
+	signal(SIGINT,signal_handler);
 
 	//Initialize sephamore
     sem_init(&pmutex, 0, 1);
