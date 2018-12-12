@@ -147,11 +147,10 @@ void ender()
 {
 	client * pointer = malloc(sizeof(client));
 	pointer = clientlist;
-	char buff[MAX];
+	char buff[] = "Server is terminating program, DISCONNECTING\n";
 	while(pointer!=NULL){
 		pthread_t id = pointer->tid;
 		int fd = pointer->sock;
-		buff = "Server is terminating program, DISCONNECTING\n";
 		write(fd, buff, sizeof(buff));
 		close(fd);
 		pthread_cancel(id);
@@ -179,11 +178,11 @@ void signal_handler(int signum)
 }
 void* print(void* arg){
 	while(true){
-	sem_wait(&mutex);
+	sem_wait(&pmutex);
 	printf(">>>>>>>List of Accounts:<<<<<<<\n");
 	metadata();
 	printf(">>>>>>>>>>End of List<<<<<<<<<<\n");
-	sem_post(&mutex);
+	sem_post(&pmutex);
 	sleep(15);
 	}
 }
