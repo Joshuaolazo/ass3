@@ -304,7 +304,7 @@ void banking(void * args)
 			else{
 				example->flag = false;
 				isServiceSession = false;
-				sprintf(buff,"Account with name: --%s-- :is now OUT OF service\n",inputcopy);
+				sprintf(buff,"Account with name: --%s-- :is now OUT OF service\n",example->name);
 			}
 		}
 
@@ -313,9 +313,10 @@ void banking(void * args)
 			sprintf(buff,"quit\n");
 		}
 		else{
-			sprintf(buff,"error: %s does not contain a valid command\n");
+			sprintf(buff,"error: %s does not contain a valid command\n",buff);
 		}
 			write(sockfd, buff, sizeof(buff));
+			//free(inputcopy);
 	}
 	bzero(buff, MAX);
 	sprintf(buff,"Server is terminating program, DISCONNECTING\n");

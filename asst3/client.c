@@ -47,6 +47,7 @@ void readr(void * args)
             printf("Client Exiting\n");
             terminate = true;
 			close(sockfd);
+			pthread_exit(NULL);
             break;
         }
 
