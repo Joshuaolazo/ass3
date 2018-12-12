@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <unistd.h>
 #include <signal.h>
 // define port and max for now
