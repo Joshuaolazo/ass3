@@ -323,7 +323,7 @@ void banking(void * args)
 			sprintf(buff,"quit\n");
 		}
 		else{
-			sprintf(buff,"error: %s does not contain a valid command\n",buff);
+			sprintf(buff,"error: %s does not contain a valid command\n",inputcopy);
 		}
 			write(sockfd, buff, sizeof(buff));
 			//free(inputcopy);
