@@ -44,17 +44,17 @@ void readr(void * args)
 
 		printf("From Server : %s", buff);
 		// if server turns off buff recives 0 bytes
-        if (bytes == 0 ) {
-			printf("Server is terminating program, DISCONNECTING\n");
+		if (bytes == 0 ) {
+			printf("Server disconnected, bytes recieved 0\n");
 			printf("Client Exiting\n");
-            terminate = true;
+			terminate = true;
 			close(sockfd);
 			//printf("canceling: %i\n",in_args->writetid );
 			pthread_cancel(in_args->writetid);
 			pthread_exit(NULL);
-            break;
-        }
-		if (strcmp( buff, "Client has been disconnected.\n", 30)==0){
+			break;
+		}
+		if (strcmp( buff, "Client has been disconnected.\n")==0){
 			printf("Client Exiting\n");
 			terminate = true;
 			close(sockfd);
@@ -173,5 +173,5 @@ int main(int argc, char const *argv[])
 
     // terminate the socket
     close(sockfd);
-	return 0;
+	exit(0);
 }

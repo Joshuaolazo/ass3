@@ -143,41 +143,42 @@ void ender()
 	while(pointer!=NULL){
 		pthread_t id = pointer->tid;
 		int fd = pointer->sock;
-		fflush(fd);
+		//printf("closing  tid: %d, sockfd: %d \n",id,fd);
+		fflush(stdin);
 		write(fd, buff, sizeof(buff));
 		close(fd);
 		pthread_cancel(id);
-		// maybe join instead
+		pointer= pointer->next;
 		// pthread_join(id,NULL);
 	}
-	printf("all closed");
+	
 	close(originalfd);
 	exit(0);
 }
 
 void signal_handler(int signum)
 {
-    if(signum== SIGINT){
-		fprintf(stderr, "got control C\n",signum);
-        terminate = true;
+	if(signum== SIGINT){
+		//fprintf(stderr, "got control C\n",signum);
+		terminate = true;
 		ender();
 
-    }/*else if (signum == SIGALARM) {
+	}/*else if (signum == SIGALARM) {
         print = true;
     }*/
 	else{
-        fprintf(stderr, "Recieved a bad signum, got: %d closing anyways\n",signum);
-        terminate = true;
+		fprintf(stderr, "Recieved a bad signum, got: %d closing anyways\n",signum);
+		terminate = true;
     }
 }
 void* print(void* arg){
 	while(true){
-	sem_wait(&pmutex);
-	printf(">>>>>>>List of Accounts:<<<<<<<\n");
-	metadata();
-	printf(">>>>>>>>>>End of List<<<<<<<<<<\n");
-	sem_post(&pmutex);
-	sleep(15);
+		sem_wait(&pmutex);
+		printf(">>>>>>>List of Accounts:<<<<<<<\n");
+		metadata();
+		printf(">>>>>>>>>>End of List<<<<<<<<<<\n");
+		sem_post(&pmutex);
+		sleep(15);
 	}
 }
 
@@ -418,6 +419,7 @@ int main(int argc, char const *argv[])
 		else{
 			printf("server acccept the client...\n");
 		}
+		
 		// pthread prep
 		pthread_t new;
 		// idk if attr is necessary
