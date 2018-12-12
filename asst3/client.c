@@ -49,7 +49,7 @@ void readr(void * args)
             printf("Client Exiting\n");
             terminate = true;
 			close(sockfd);
-			pthread_cancel(in_args->readtid);
+			pthread_cancel(in_args->writetid);
 			pthread_exit(NULL);
             break;
         }
