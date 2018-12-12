@@ -40,7 +40,7 @@ void readr(void * args)
         bzero(buff, sizeof(buff));
         int bytes = read(sockfd, buff, sizeof(buff));
 
-        printf("From Server : %s\n", buff);
+        printf("From Server : %s", buff);
 		// if server turns off buff recives 0 bytes
         if (bytes == 0) {
 			printf("Server is terminating program, DISCONNECTING\n");
@@ -49,6 +49,7 @@ void readr(void * args)
 			close(sockfd);
             break;
         }
+
 
     }
 	//printf("write pthread exit\n");

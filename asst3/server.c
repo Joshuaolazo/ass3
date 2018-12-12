@@ -314,10 +314,7 @@ void banking(void * args)
 		}
 		else{
 			sprintf(buff,"error: %s does not contain a valid command\n");
-			bzero(buff, MAX);
-			write(sockfd, buff, sizeof(buff));
 		}
-			bzero(buff, MAX);
 			write(sockfd, buff, sizeof(buff));
 	}
 	bzero(buff, MAX);
