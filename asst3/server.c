@@ -3,6 +3,8 @@
 account * global= NULL;
 client * clientlist= NULL;
 bool terminate = false;
+// sephamore to stop all threads for print
+sem_t pmutex;
 
 //want to remove the command and the whitespace
 bool nameAlreadyExists(char * input){
@@ -21,6 +23,7 @@ bool nameAlreadyExists(char * input){
 }
 void createAccount(char * input)
 {
+	sem_wait(&pmutex);
 	account * newAccount = malloc(sizeof(account));
 	account * pointer = malloc(sizeof(account));
 	newAccount->name = input;
@@ -42,6 +45,7 @@ void createAccount(char * input)
 		pointer->next =  newAccount;
 
 	}
+	sem_post(&pmutex);
 	//free(pointer);
 	return;
 }
@@ -114,7 +118,7 @@ int isNumeric(char* data){
 
 void metadata()
 {
-   	//sem_wait(&mutex);
+   	sem_wait(&pmutex);
    	printf("Beginning Metadata Dump\n");
     account* ptr =(account*) malloc(sizeof(account));
 	ptr = global;
@@ -131,7 +135,7 @@ void metadata()
         	}
 		ptr=ptr->next;
     }
-    //sem_post(&mutex);
+    sem_post(&pmutex);
     return;
 }
 void ender()
@@ -186,8 +190,10 @@ void banking(void * args)
 		//My shitty code
 
 		//example account created set to flagged account if not last node
+		sem_wait(&pmutex);
 		account * example;
 		example = global;
+		sem_post(&pmutex);
 		bool flagFound = false;
 
 		while(example!=NULL){
@@ -340,7 +346,7 @@ int main(int argc, char const *argv[])
 	//signal(SIGINT,signal_handler);
 
 	//Initialize sephamore
-    //sem_init(&pmutex, 0, 1);
+    sem_init(&pmutex, 0, 1);
 
 	int p = atoi(argv[1]);
 	PORT = &p;
