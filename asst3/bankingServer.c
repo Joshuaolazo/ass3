@@ -332,6 +332,8 @@ void banking(void * args)
 				}
 			}
 			sprintf(buff,"Client has been disconnected.\n");
+			close(sockfd);
+			pthread_exit();
 		}
 		else{
 			strcpy(inputcopy,trimcommand(inputcopy,0));
