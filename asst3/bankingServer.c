@@ -196,10 +196,10 @@ void banking(void * args)
 		//My shitty code
 
 		//example account created set to flagged account if not last node
-		//sem_wait(&pmutex);
+		sem_wait(&pmutex);
 		account * example;
 		example = global;
-		//sem_post(&pmutex);
+		sem_post(&pmutex);
 		bool flagFound = false;
 
 		while(example!=NULL){
