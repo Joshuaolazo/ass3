@@ -325,9 +325,11 @@ void banking(void * args)
 
 		//QUIT
 		else if(strncmp("quit",buff,4)==0){
-			if(example->flag){
-				example->flag = false;
-				isServiceSession = false;
+			if(example != NULL){
+				if(example->flag){
+					example->flag = false;
+					isServiceSession = false;
+				}
 			}
 			sprintf(buff,"Client has been disconnected.\n");
 		}
